@@ -2,12 +2,13 @@
 import { RefObject } from "react";
 import { useReactToPrint } from "react-to-print";
 
-interface Props {
+export function PdfDownloadButton({
+  targetRef,
+  children,
+}: {
   targetRef: RefObject<HTMLElement>;
   children: React.ReactNode;
-}
-
-export function PdfDownloadButton({ targetRef, children }: Props) {
+}) {
   const handlePrint = useReactToPrint({
     content: () => targetRef.current,
   });
