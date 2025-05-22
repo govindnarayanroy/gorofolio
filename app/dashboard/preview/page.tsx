@@ -1,48 +1,23 @@
-// app/dashboard/preview/page.tsx
 "use client";
 
+import { useRef } from "react";
 import ResumePreview from "@/components/ResumePreview";
 import { PdfDownloadButton } from "@/components/PdfDownloadButton";
 import { Profile } from "@/lib/types";
 
-const mock: Profile = {
-  name: "Jane Doe",
-  headline: "Frontend Engineer",
-  summary:
-    "Passionate developer with 4+ years building scalable React & Next.js applications.",
-  experiences: [
-    {
-      company: "Acme Corp",
-      role: "Software Engineer",
-      start: "2022-01",
-      end: undefined,
-      bullets: [
-        "Led migration to Next.js 14 and Turbopack.",
-        "Improved Core Web Vitals (LCP 1.9s → 1.2s).",
-      ],
-    },
-  ],
-  education: [
-    {
-      school: "State University",
-      degree: "B.Tech Computer Science",
-      year: "2021",
-    },
-  ],
-  skills: ["React", "TypeScript", "Next.js", "TailwindCSS"],
-  links: [
-    { label: "GitHub", url: "https://github.com/janedoe" },
-    { label: "Portfolio", url: "https://janedoe.dev" },
-  ],
-};
+const mock: Profile = { /* …same as before… */ };
 
 export default function PreviewPage() {
+  const resumeRef = useRef<HTMLDivElement>(null);
+
   return (
     <main className="mx-auto max-w-4xl space-y-6 px-6 py-10">
-      <PdfDownloadButton>Download PDF</PdfDownloadButton>
+      <PdfDownloadButton targetRef={resumeRef}>Download PDF</PdfDownloadButton>
 
-      {/* Resume itself */}
-      <ResumePreview profile={mock} />
+      {/* Attach the ref here */}
+      <div ref={resumeRef}>
+        <ResumePreview profile={mock} />
+      </div>
     </main>
   );
 }
