@@ -14,7 +14,7 @@
 | Cover‑letter service   |    ✅   | agent | 2025‑01‑22   |
 | Ingestion endpoint     |    ✅   | agent | 2025‑01‑22   |
 | Mock interview module  |    ✅   | agent | 2025‑01‑22   |
-| Landing page polish    |    ⬜   | agent | —            |
+| Landing page polish    |    ✅   | agent | 2025‑01‑22   |
 | External links section |    ⬜   | agent | —            |
 | CI/CD & tests          |    ⬜   | agent | —            |
 
