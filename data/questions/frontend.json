@@ -1,0 +1,65 @@
+{
+  "title": "Frontend Engineering",
+  "questions": [
+    {
+      "id": "fe-1",
+      "text": "Explain the concept of React hooks. What are the rules of hooks?",
+      "category": "React"
+    },
+    {
+      "id": "fe-2",
+      "text": "How do you handle state management in a large React application?",
+      "category": "State Management"
+    },
+    {
+      "id": "fe-3",
+      "text": "Explain the concept of virtual DOM. How does it work?",
+      "category": "React"
+    },
+    {
+      "id": "fe-4",
+      "text": "How do you optimize performance in a React application?",
+      "category": "Performance"
+    },
+    {
+      "id": "fe-5",
+      "text": "Explain the concept of CSS-in-JS. What are the pros and cons?",
+      "category": "Styling"
+    },
+    {
+      "id": "fe-6",
+      "text": "How do you handle form validation in a React application?",
+      "category": "Forms"
+    },
+    {
+      "id": "fe-7",
+      "text": "Explain the concept of code splitting. How do you implement it?",
+      "category": "Performance"
+    },
+    {
+      "id": "fe-8",
+      "text": "How do you handle error boundaries in React?",
+      "category": "Error Handling"
+    },
+    {
+      "id": "fe-9",
+      "text": "Explain the concept of server-side rendering. When would you use it?",
+      "category": "Rendering"
+    },
+    {
+      "id": "fe-10",
+      "text": "How do you implement responsive design?",
+      "category": "CSS"
+    },
+    {
+      "id": "fe-11",
+      "text": "Explain the concept of progressive web apps. How do you implement them?",
+      "category": "PWA"
+    },
+    {
+      "id": "fe-12",
+      "text": "How do you handle accessibility in a React application?",
+      "category": "Accessibility"
+    }
+  ]
+} 

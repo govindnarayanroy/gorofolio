@@ -1,6 +1,6 @@
 # 🚀 Next Steps Roadmap
 
-> Follow each bullet top-to-bottom, commit after every section, and you’ll ship each module without losing context.
+> Follow each bullet top-to-bottom, commit after every section, and you'll ship each module without losing context.
 
 ---
 
@@ -106,7 +106,7 @@ module.exports = {
 
 ## 5 · Milestone Checklist
 
-- [ ] Cover-letter route returns Markdown in < 3 s  
+- [ ] Cover-letter route returns Markdown in < 3 s  
 - [ ] Ingestion endpoint parses LinkedIn PDF → `Profile` JSON  
 - [ ] Interview module records audio, shows score card  
 - [ ] README progress table updated after each module  

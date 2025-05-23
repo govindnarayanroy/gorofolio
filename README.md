@@ -6,13 +6,14 @@
 
 ## Progress Tracker
 
-| Module                 | Status | Owner | Last Updated |
+| Module                 | Status | Owner | Last Updated |
 | ---------------------- | :----: | ----- | ------------ |
 | Repo scaffold          |    ✅   | you   | 2025‑05‑22   |
-| LLM client             |    ⬜   | agent | —            |
-| Resume preview         |    ⬜   | agent | —            |
-| Cover‑letter service   |    ⬜   | agent | —            |
-| Mock interview module  |    ⬜   | agent | —            |
+| LLM client             |    ✅   | agent | 2025‑05‑22   |
+| Resume preview         |    ✅   | agent | 2025‑05‑22   |
+| Cover‑letter service   |    ✅   | agent | 2025‑05‑22   |
+| Ingestion endpoint     |    ✅   | agent | 2025‑05‑22   |
+| Mock interview module  |    ✅   | agent | 2024-05-23   |
 | Landing page polish    |    ⬜   | agent | —            |
 | External links section |    ⬜   | agent | —            |
 | CI/CD & tests          |    ⬜   | agent | —            |
@@ -21,23 +22,23 @@
 
 ---
 
-# 0 · Prereqs & One‑time Setup
+# 0 · Prereqs & One‑time Setup
 
 | Step                  | Command / File                                                                          | Why it matters                                                |
 | --------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
 | **Clone starter app** | `npx create-next-app@latest go-rofolio --ts --tailwind --eslint --app`                  | Gives a Next.js **/app** router and Tailwind pre‑configured.  |
 | **Install dev deps**  | `pnpm add -D shadcn/ui clsx @tailwindcss/typography react-hook-form zod react-to-print` | Shadcn for polished UI, `react-to-print` for PDF export.      |
-| **Add LLM clients**   | `pnpm add groq openai @mistralai/client whisper-tts`                                    | Groq will run **Llama 3** + **Mistral**; Whisper handles STT. |
-| **Open in Cursor**    | Open repo → **⌘K ⌘I** → set *Workspace Context* to repo root                            | Ensures Cursor agents load the entire codebase each prompt.   |
+| **Add LLM clients**   | `pnpm add groq openai @mistralai/client whisper-tts`                                    | Groq will run **Llama 3** + **Mistral**; Whisper handles STT. |
+| **Open in Cursor**    | Open repo → **⌘K ⌘I** → set *Workspace Context* to repo root                            | Ensures Cursor agents load the entire codebase each prompt.   |
 
 ---
 
-# 1 · Repo Skeleton
+# 1 · Repo Skeleton
 
 ```
 go-rofolio/
 │
-├─ app/              ← Next.js routes (App Router)
+├─ app/              ← Next.js routes (App Router)
 │   ├─ page.tsx      ← Marketing landing
 │   ├─ dashboard/    ← Wizard after signup
 │   └─ api/          ← Edge functions: /ingest, /generate, /interview
@@ -48,18 +49,18 @@ go-rofolio/
 │   └─ AnimatedCoach.tsx
 │
 ├─ lib/
-│   ├─ llmClient.ts      ← Strategy wrapper: OpenAI | Groq
+│   ├─ llmClient.ts      ← Strategy wrapper: OpenAI | Groq
 │   ├─ pdf.ts            ← print‑specific CSS + react‑to‑print hook
 │   └─ templates/        ← static DOCX & React resume templates
 │
 ├─ prompts/              ← Markdown prompt files (never inline!)
-├─ scripts/bench.ts      ← Llama vs Mistral latency script
+├─ scripts/bench.ts      ← Llama vs Mistral latency script
 └─ .env.example
 ```
 
 ---
 
-# 2 · LLM Client (Groq + Mistral)
+# 2 · LLM Client (Groq + Mistral)
 
 ```ts
 export async function chatLLM(
@@ -70,77 +71,77 @@ export async function chatLLM(
 ) { /* … */ }
 ```
 
-* **Groq base URL** → `https://api.groq.com/openai/v1`
+* **Groq base URL** → `https://api.groq.com/openai/v1`
 * **Strip unsupported params** (`logprobs`, `logit_bias`, `n`) when `provider === "groq"`.
 * **Default models**
 
-  * Draft work → `mistral‑7b‑instruct`
-  * Reasoning / scoring → `llama3‑70b‑8192`
+  * Draft work → `mistral‑7b‑instruct`
+  * Reasoning / scoring → `llama3‑70b‑8192`
 
 ---
 
-# 3 · Ingestion Flow
+# 3 · Ingestion Flow
 
 | Stage            | Library                                                                 | Guard‑rails                                                |
 | ---------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------- |
-| **PDF → text**   | `pdf-parse`                                                             | Throw if extracted text `< 200 chars` (likely blank scan). |
-| **LinkedIn PDF** | Regex for “Experience” & “Education”                                    | Save raw text in S3 for audit.                             |
-| **Parse → JSON** | Prompt in `prompts/parse.md` to `chatLLM("groq","mistral-7b-instruct")` | Conform to single `Profile` schema in `lib/types.ts`.      |
+| **PDF → text**   | `pdf-parse`                                                             | Throw if extracted text `< 200 chars` (likely blank scan). |
+| **LinkedIn PDF** | Regex for "Experience" & "Education"                                    | Save raw text in S3 for audit.                             |
+| **Parse → JSON** | Prompt in `prompts/parse.md` to `chatLLM("groq","mistral-7b-instruct")` | Conform to single `Profile` schema in `lib/types.ts`.      |
 
 ---
 
-# 4 · Resume Generation (HTML → print‑perfect PDF)
+# 4 · Resume Generation (HTML → print‑perfect PDF)
 
-## 4.1 Web preview component
+## 4.1 Web preview component
 
 ```tsx
 <article className="prose prose-zinc w-[210mm] bg-white p-8 print:p-0">
-  {/* 210 mm = exact A4 width to avoid wraps */}
+  {/* 210 mm = exact A4 width to avoid wraps */}
   …
 </article>
 ```
 
-## 4.2 Print / download logic
+## 4.2 Print / download logic
 
 1. `useReactToPrint({ content: () => ref.current })`
 2. `@page { size: A4; margin: 12mm 14mm; }`
-3. Button calls `handlePrint()` → identical spacing in browser & PDF.
+3. Button calls `handlePrint()` → identical spacing in browser & PDF.
 
-> **Why browser print?** Server‑side docx→pdf often shifts line‑height and caused last project’s spacing bugs.
+> **Why browser print?** Server‑side docx→pdf often shifts line‑height and caused last project's spacing bugs.
 
 ---
 
-# 5 · Cover‑Letter Generator
+# 5 · Cover‑Letter Generator
 
 `POST /api/generate/cover` → body `{ profileId, jdText, tone }`
 
 Backend flow:
 
 1. Prompt `prompts/cover-letter.md` → `chatLLM("groq","mistral-7b-instruct")`
-2. Render with **React Email** template.
-3. Return HTML; front‑end provides editable textarea + “Regenerate”.
+2. Render with **React Email** template.
+3. Return HTML; front‑end provides editable textarea + "Regenerate".
 
 Rules inside the prompt:
 
 * Exactly 3 paragraphs
-* 150–180 words
+* 150–180 words
 * Must mention company & role strings verbatim
 
 ---
 
-# 6 · Mock Interview Module
+# 6 · Mock Interview Module
 
 | Component       | Stack                                                                     |
 | --------------- | ------------------------------------------------------------------------- |
 | **Recorder**    | `@ffmpeg/wasm` + `MediaRecorder`                                          |
 | **STT**         | `whisper-tts` via Edge function                                           |
-| **Q\&A loop**   | Each answer → `chatLLM("groq","llama3-70b-8192")` (function call `score`) |
+| **Q&A loop**   | Each answer → `chatLLM("groq","llama3-70b-8192")` (function call `score`) |
 | **Coach UI**    | `AnimatedCoach.tsx` uses a Lottie animation while LLM processes           |
 | **Result card** | Total score (/10) + 3 improvement tips                                    |
 
 ---
 
-# 7 · Landing Page Polish
+# 7 · Landing Page Polish
 
 Use Tailwind gradient hero:
 
@@ -166,7 +167,7 @@ Use Tailwind gradient hero:
 
 ---
 
-# 8 · External Links Section (portfolio page)
+# 8 · External Links Section (portfolio page)
 
 ```tsx
 <ul className="grid sm:grid-cols-2 gap-4">
@@ -181,10 +182,10 @@ Use Tailwind gradient hero:
 
 ---
 
-# 9 · WindSurf / Cursor Agent Workflow
+# 9 · WindSurf / Cursor Agent Workflow
 
 1. Open README section for next unchecked item.
-2. `⌥⌘P` → “Generate …” (small, precise ask).
+2. `⌥⌘P` → "Generate …" (small, precise ask).
 3. Review diff, apply, commit.
 4. Update progress table in the **same commit**.
 
@@ -200,13 +201,13 @@ Closes #123 – implements ResumePreview print‑safe spacing.
 
 ---
 
-# 10 · Learning Road‑map for You
+# 10 · Learning Road‑map for You
 
 | Week | Goal                  | Hands‑on                                               |
 | ---- | --------------------- | ------------------------------------------------------ |
 | 1    | LLM orchestration     | Benchmark Groq latency in `scripts/bench.ts`.          |
 | 2    | Tailwind print design | Build two‑column résumé; print to PDF, tweak.          |
-| 3    | Media + STT           | Record audio, stream to Whisper, show live transcript. |
+| 3    | Media + STT           | Record audio, stream to Whisper, show live transcript. |
 | 4    | Prompt engineering    | A/B test cover‑letter prompt; track manual‑edit rate.  |
 
 ---
@@ -214,10 +215,10 @@ Closes #123 – implements ResumePreview print‑safe spacing.
 ## Final Sanity Checklist (pre‑alpha)
 
 * [ ] PDF export has no blank second page.
-* [ ] Groq usage < 300 RPM (free tier).
+* [ ] Groq usage < 300 RPM (free tier).
 * [ ] Three starter résumé templates (SW, Design, Data).
 * [ ] Lottie coach animation looks fine in dark mode.
 
 ---
 
-> **“Context is cash.”** Work through the README one block at a time, keep commits atomic, and you’ll ship a polished GoRoFolio v1—minus the spacing nightmares. 🚀
+> **"Context is cash."** Work through the README one block at a time, keep commits atomic, and you'll ship a polished GoRoFolio v1—minus the spacing nightmares. 🚀

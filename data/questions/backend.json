@@ -1,0 +1,65 @@
+{
+  "title": "Backend Engineering",
+  "questions": [
+    {
+      "id": "be-1",
+      "text": "Explain the difference between REST and GraphQL. When would you choose one over the other?",
+      "category": "API Design"
+    },
+    {
+      "id": "be-2",
+      "text": "How do you handle database migrations in a production environment?",
+      "category": "Database"
+    },
+    {
+      "id": "be-3",
+      "text": "Explain the concept of database indexing. When would you add an index?",
+      "category": "Database"
+    },
+    {
+      "id": "be-4",
+      "text": "How do you implement caching in a distributed system?",
+      "category": "System Design"
+    },
+    {
+      "id": "be-5",
+      "text": "Explain the concept of rate limiting. How would you implement it?",
+      "category": "System Design"
+    },
+    {
+      "id": "be-6",
+      "text": "How do you handle authentication and authorization in a microservices architecture?",
+      "category": "Security"
+    },
+    {
+      "id": "be-7",
+      "text": "Explain the concept of eventual consistency. When is it acceptable?",
+      "category": "System Design"
+    },
+    {
+      "id": "be-8",
+      "text": "How do you monitor and debug performance issues in a production environment?",
+      "category": "DevOps"
+    },
+    {
+      "id": "be-9",
+      "text": "Explain the concept of idempotency in API design. Why is it important?",
+      "category": "API Design"
+    },
+    {
+      "id": "be-10",
+      "text": "How do you handle data validation in your APIs?",
+      "category": "API Design"
+    },
+    {
+      "id": "be-11",
+      "text": "Explain the concept of database transactions. When would you use them?",
+      "category": "Database"
+    },
+    {
+      "id": "be-12",
+      "text": "How do you implement error handling in a distributed system?",
+      "category": "System Design"
+    }
+  ]
+} 
