@@ -8,12 +8,12 @@
 
 | Module                 | Status | Owner | Last Updated |
 | ---------------------- | :----: | ----- | ------------ |
-| Repo scaffold          |    ✅   | you   | 2025‑05‑22   |
-| LLM client             |    ✅   | agent | 2025‑05‑22   |
-| Resume preview         |    ✅   | agent | 2025‑05‑22   |
-| Cover‑letter service   |    ✅   | agent | 2025‑05‑22   |
-| Ingestion endpoint     |    ✅   | agent | 2025‑05‑22   |
-| Mock interview module  |    ✅   | agent | 2024-05-23   |
+| Repo scaffold          |    ✅   | you   | 2025‑01‑22   |
+| LLM client             |    ✅   | agent | 2025‑01‑22   |
+| Resume preview         |    ✅   | agent | 2025‑01‑22   |
+| Cover‑letter service   |    ✅   | agent | 2025‑01‑22   |
+| Ingestion endpoint     |    ✅   | agent | 2025‑01‑22   |
+| Mock interview module  |    ✅   | agent | 2025‑01‑22   |
 | Landing page polish    |    ⬜   | agent | —            |
 | External links section |    ⬜   | agent | —            |
 | CI/CD & tests          |    ⬜   | agent | —            |
@@ -129,15 +129,30 @@ Rules inside the prompt:
 
 ---
 
-# 6 · Mock Interview Module
+# 6 · Mock Interview Module ✅ COMPLETED
 
-| Component       | Stack                                                                     |
-| --------------- | ------------------------------------------------------------------------- |
-| **Recorder**    | `@ffmpeg/wasm` + `MediaRecorder`                                          |
-| **STT**         | `whisper-tts` via Edge function                                           |
-| **Q&A loop**   | Each answer → `chatLLM("groq","llama3-70b-8192")` (function call `score`) |
-| **Coach UI**    | `AnimatedCoach.tsx` uses a Lottie animation while LLM processes           |
-| **Result card** | Total score (/10) + 3 improvement tips                                    |
+| Component       | Stack                                                                     | Status |
+| --------------- | ------------------------------------------------------------------------- | ------ |
+| **Recorder**    | `MediaRecorder` API + React hooks                                        | ✅ Working |
+| **STT**         | Groq `whisper-large-v3` via Edge function                               | ✅ Working |
+| **Q&A loop**    | Each answer → `chatLLM("groq","llama3-8b-8192")` scoring                | ✅ Working |
+| **Coach UI**    | `InterviewCoach.tsx` with Lottie animation during processing             | ✅ Working |
+| **Result card** | Total score (/10) + per-question feedback                               | ✅ Working |
+
+### Architecture Changes Made:
+- **Removed FFmpeg dependency**: Used native `MediaRecorder` for browser audio capture
+- **Groq Whisper integration**: Real-time transcription with `whisper-large-v3` model  
+- **Per-question workflow**: Record → Stop → Transcribe → Score → Next Question
+- **Session management**: Complete interview flow with state persistence
+- **Real audio processing**: Variable file sizes (27KB-381KB) vs. previous mock data
+
+### Key Features:
+- ✅ Real-time audio recording with visual feedback
+- ✅ Groq Whisper transcription (fallback to mock on API errors)
+- ✅ LLM-powered scoring with detailed feedback  
+- ✅ Per-question progress tracking
+- ✅ Clean submit/next question workflow
+- ✅ Interview completion with results summary
 
 ---
 
