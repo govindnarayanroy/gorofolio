@@ -17,8 +17,9 @@
 | Landing page polish     |    ✅   | agent | 2025‑01‑22   |
 | External links & hosting|    ✅   | agent | 2025‑01‑22   |
 | Auth & Dashboard Sprint |    ✅   | agent | 2025‑01‑22   |
-| Editor Screen Sprint    |    ✅   | agent | 2025‑01‑22   |
-| User Flow Integration   |    ⬜   | agent | —            |
+| Editor Screen Sprint    |    ✅   | agent | 2025‑01‑26   |
+| User Flow Integration   |    ✅   | agent | 2025‑01‑26   |
+| Logic Polish            |    ⬜   | agent |    |
 | CI/CD & tests           |    ⬜   | agent | —            |
 
 *(Tick ✅, update the date, and commit whenever a task finishes.)*
@@ -273,7 +274,89 @@ components/
 
 ---
 
-# 9 · WindSurf / Cursor Agent Workflow
+# 9 · User Flow Integration ✅ COMPLETED
+
+**Status:** Production-ready portfolio publishing with Vercel deploy hooks
+
+## 9.1 Portfolio Publishing System
+
+Complete integration with Vercel deploy hooks for seamless portfolio publishing:
+
+```tsx
+// POST /api/portfolio/deploy - Real Vercel deployment
+{
+  "success": true,
+  "url": "https://gorofolio-git-main-govind-roys-projects.vercel.app",
+  "deploymentId": "hook-1748270624777",
+  "message": "Portfolio deployment triggered successfully",
+  "hookTriggered": true
+}
+```
+
+## 9.2 Key Features Implemented
+
+| Feature | Implementation | Status |
+|---------|---------------|--------|
+| **Vercel Deploy Hooks** | Environment-based configuration with `VERCEL_DEPLOY_HOOK` | ✅ Working |
+| **Portfolio URL Display** | Dynamic URL updates with actual Vercel domain | ✅ Working |
+| **Publish/Unpublish Flow** | Complete state management with UI feedback | ✅ Working |
+| **Error Handling** | Graceful fallback to mock deployment for development | ✅ Working |
+| **Database Integration** | Portfolio URLs saved to Supabase | ✅ Working |
+
+## 9.3 Environment Configuration
+
+Required environment variables for production deployment:
+
+```env
+# Required for Vercel deployment
+VERCEL_DEPLOY_HOOK=https://api.vercel.com/v1/integrations/deploy/your-hook-id/your-project-id
+
+# Optional - defaults to gorofolio-git-main-govind-roys-projects.vercel.app
+VERCEL_PROJECT_URL=your-project.vercel.app
+```
+
+## 9.4 User Experience Flow
+
+1. **Portfolio Creation**: Users build portfolios in dashboard editor
+2. **Publishing**: Click "Publish Portfolio" triggers Vercel deployment
+3. **Live URL**: Real Vercel URL displayed and copyable
+4. **View Live**: Opens actual deployed portfolio in new tab
+5. **Unpublish**: Option to make portfolio private again
+
+## 9.5 Technical Implementation
+
+### Deploy API Route
+```typescript
+// app/api/portfolio/deploy/route.ts
+- Environment-based Vercel hook triggering
+- Fallback to mock deployment for development
+- Database integration for URL storage
+- Comprehensive error handling and logging
+```
+
+### Frontend Component
+```typescript
+// components/PortfolioPublish.tsx
+- Real-time URL updates from API responses
+- Loading states and user feedback
+- Publish/unpublish state management
+- Copy and share functionality
+```
+
+## 9.6 Testing Results
+
+- ✅ **Vercel Deploy Hook**: Successfully triggers deployments with job IDs
+- ✅ **URL Display**: Shows correct `gorofolio-git-main-govind-roys-projects.vercel.app`
+- ✅ **Copy Functionality**: Copies actual deployment URL
+- ✅ **View Live**: Opens live Vercel deployment
+- ✅ **State Management**: Proper publish/unpublish flow
+- ✅ **Error Handling**: Graceful fallback for missing configuration
+
+**Implementation Quality:** Production-ready with comprehensive testing via Playwright MCP
+
+---
+
+# 10 · WindSurf / Cursor Agent Workflow
 
 1. Open README section for next unchecked item.
 2. `⌥⌘P` → "Generate …" (small, precise ask).
