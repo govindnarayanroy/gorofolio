@@ -16,7 +16,7 @@
 | Mock interview module   |    ✅   | agent | 2025‑01‑22   |
 | Landing page polish     |    ✅   | agent | 2025‑01‑22   |
 | External links & hosting|    ✅   | agent | 2025‑01‑22   |
-| Auth & Dashboard Sprint |    ⬜   | agent | —            |
+| Auth & Dashboard Sprint |    ✅   | agent | 2025‑01‑22   |
 | Editor Screen Sprint    |    ⬜   | agent | —            |
 | User Flow Integration   |    ⬜   | agent | —            |
 | CI/CD & tests           |    ⬜   | agent | —            |

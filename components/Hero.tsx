@@ -63,9 +63,9 @@ export default function Hero() {
             
             {/* Enhanced CTA Section - Redesigned */}
             <div className="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start items-center mb-12">
-              {/* Primary CTA - Completely Redesigned */}
+              {/* Primary CTA - Updated to link to /login */}
               <Link 
-                href="/dashboard"
+                href="/login"
                 className="group relative bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 text-white font-bold text-xl px-12 py-6 rounded-2xl transition-all duration-300 hover:from-blue-500 hover:via-cyan-400 hover:to-blue-400 hover:scale-110 hover:shadow-2xl hover:shadow-blue-500/40 transform-gpu border-2 border-white/20 hover:border-white/40"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
