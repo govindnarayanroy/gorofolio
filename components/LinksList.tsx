@@ -10,6 +10,11 @@ export function LinksList({ links }: LinksListProps) {
   if (!links || links.length === 0) return null;
 
   const getIcon = (label: string) => {
+    // Handle undefined, null, or empty labels
+    if (!label || typeof label !== 'string') {
+      return <FaExternalLinkAlt size={18} />;
+    }
+    
     const lower = label.toLowerCase();
     
     if (lower.includes('github')) return <FaGithub size={20} />;
@@ -22,11 +27,22 @@ export function LinksList({ links }: LinksListProps) {
     return <FaExternalLinkAlt size={18} />;
   };
 
+  // Filter out invalid links
+  const validLinks = links.filter(link => 
+    link && 
+    typeof link === 'object' && 
+    link.url && 
+    typeof link.url === 'string' &&
+    link.url.trim() !== ''
+  );
+
+  if (validLinks.length === 0) return null;
+
   return (
     <section className="mt-8 print:hidden">
       <h3 className="text-lg font-semibold text-gray-800 mb-4">External Links</h3>
       <div className="flex flex-wrap gap-4">
-        {links.map((link, index) => (
+        {validLinks.map((link, index) => (
           <a
             key={index}
             href={link.url}
@@ -38,7 +54,7 @@ export function LinksList({ links }: LinksListProps) {
               {getIcon(link.label)}
             </span>
             <span className="text-gray-700 group-hover:text-gray-900 font-medium transition-colors">
-              {link.label}
+              {link.label || 'External Link'}
             </span>
             <FaExternalLinkAlt size={12} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
           </a>

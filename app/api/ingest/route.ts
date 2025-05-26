@@ -6,12 +6,23 @@ import { chatLLM } from "@/lib/llmClient";
 import { Profile } from "@/lib/types";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { createClient } from "@/lib/supabase-server";
 
 const MAX_SIZE = 4 * 1024 * 1024; // 4 MB
 
 export async function POST(req: Request) {
   try {
     console.log("📥 Ingest API called");
+    
+    // Get authenticated user
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.log("❌ Authentication failed");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    
     const form = await req.formData();
     const file = form.get("file") as File;
 
@@ -92,6 +103,58 @@ export async function POST(req: Request) {
     } catch (parseError) {
       console.error("❌ JSON parsing failed:", parseError);
       throw new Error("LLM did not return valid JSON");
+    }
+
+    // Save the parsed profile to the database
+    console.log("💾 Saving profile to database...");
+    try {
+      // Check if user already has a resume
+      const { data: existingResume } = await supabase
+        .from('resumes')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (existingResume) {
+        // Update existing resume
+        const { data: updatedResume, error: updateError } = await supabase
+          .from('resumes')
+          .update({ 
+            data: profile,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          console.error("❌ Database update error:", updateError);
+          throw updateError;
+        }
+
+        console.log("✅ Resume updated in database");
+      } else {
+        // Create new resume
+        const { data: newResume, error: insertError } = await supabase
+          .from('resumes')
+          .insert({
+            user_id: user.id,
+            data: profile
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error("❌ Database insert error:", insertError);
+          throw insertError;
+        }
+
+        console.log("✅ Resume created in database");
+      }
+    } catch (dbError) {
+      console.error("❌ Database operation failed:", dbError);
+      // Continue without failing the request - the profile is still parsed successfully
+      console.log("⚠️ Continuing without database save...");
     }
 
     console.log("🎉 Ingestion successful!");

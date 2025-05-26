@@ -17,7 +17,7 @@
 | Landing page polish     |    ✅   | agent | 2025‑01‑22   |
 | External links & hosting|    ✅   | agent | 2025‑01‑22   |
 | Auth & Dashboard Sprint |    ✅   | agent | 2025‑01‑22   |
-| Editor Screen Sprint    |    ⬜   | agent | —            |
+| Editor Screen Sprint    |    ✅   | agent | 2025‑01‑22   |
 | User Flow Integration   |    ⬜   | agent | —            |
 | CI/CD & tests           |    ⬜   | agent | —            |
 
