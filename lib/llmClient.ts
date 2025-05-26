@@ -18,8 +18,16 @@ export async function chatLLM(
 ) {
   Msg.array().parse(messages);
 
+  const apiKey = provider === "groq" 
+    ? process.env.GROQ_API_KEY 
+    : process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error(`Missing API key for ${provider}. Please set ${provider === "groq" ? "GROQ_API_KEY" : "OPENAI_API_KEY"} in your environment variables.`);
+  }
+
   const client = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
+    apiKey,
     baseURL:
       provider === "groq"
         ? "https://api.groq.com/openai/v1"

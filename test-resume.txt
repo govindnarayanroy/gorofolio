@@ -1,0 +1,1 @@
+John Doe - Software Engineer. EXPERIENCE: Senior Developer at Tech Corp 2020-2023. Built React applications. Led team of 5 developers. EDUCATION: Computer Science, MIT 2018. SKILLS: JavaScript, React, Node.js
