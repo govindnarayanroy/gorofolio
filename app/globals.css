@@ -31,7 +31,7 @@
     padding: 0 !important;
   }
   
-  /* Hide everything except the resume */
+  /* Hide everything except the main content initially */
   body > * {
     display: none !important;
   }
@@ -39,59 +39,121 @@
   /* Show only the main content */
   body > main {
     display: block !important;
-    margin-top: -3mm !important;
-    padding-top: 0 !important;
   }
   
-  /* Hide all navigation, buttons, and non-resume elements */
-  nav, 
-  button, 
-  .no-print,
-  header:not(article header),
-  footer:not(article footer),
-  .print\\:hidden,
-  [class*="Button"],
-  [class*="button"],
-  .sticky,
-  .fixed {
-    display: none !important;
-  }
-  
-  /* Hide all content except the resume article */
-  main > * {
-    display: none !important;
-  }
-  
-  /* Show only the resume preview container */
-  main > div:has(article) {
+  /* For portfolio page - show the main div container */
+  body > div {
     display: block !important;
-    margin-top: 0 !important;
-    padding-top: 0 !important;
   }
   
-  /* Show the resume article */
+  /* Hide all navigation, buttons, and non-essential elements */
+  nav, button, .no-print, .print\\:hidden {
+    display: none !important;
+  }
+  
+  /* Hide background effects and decorative elements */
+  .absolute {
+    display: none !important;
+  }
+  
+  /* Portfolio page specific styles */
+  .min-h-screen {
+    min-height: auto !important;
+    background: white !important;
+  }
+  
+  .bg-gradient-to-br {
+    background: white !important;
+  }
+  
+  .relative.max-w-4xl {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Portfolio content container */
+  #profile-content {
+    display: block !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    background: white !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    backdrop-filter: none !important;
+  }
+  
+  /* Resume specific print styles */
   article {
-    display: block !important;
     width: 100% !important;
     max-width: none !important;
     margin: 0 !important;
     padding: 0 !important;
     box-shadow: none !important;
     border: none !important;
-    background: white !important;
   }
   
-  /* Ensure proper page breaks */
-  .page-break-inside-avoid {
-    page-break-inside: avoid;
+  /* Ensure proper spacing for print */
+  .print\\:px-0 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
   }
   
-  /* Hide any remaining UI elements */
-  .flex:has(button),
-  .space-y-4:has(button),
-  div:has(.bg-sky-600),
-  div:has(.bg-purple-600) {
-    display: none !important;
+  .print\\:py-0 {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  
+  .print\\:m-0 {
+    margin: 0 !important;
+  }
+  
+  .print\\:p-0 {
+    padding: 0 !important;
+  }
+  
+  .print\\:mt-0 {
+    margin-top: 0 !important;
+  }
+  
+  .print\\:w-full {
+    width: 100% !important;
+  }
+  
+  .print\\:max-w-none {
+    max-width: none !important;
+  }
+  
+  .print\\:shadow-none {
+    box-shadow: none !important;
+  }
+  
+  .print\\:border-none {
+    border: none !important;
+  }
+  
+  .print\\:bg-white {
+    background-color: white !important;
+  }
+  
+  .print\\:bg-slate-800 {
+    background-color: #1e293b !important;
+  }
+  
+  .print\\:bg-transparent {
+    background-color: transparent !important;
+  }
+  
+  .print\\:text-xs {
+    font-size: 0.75rem !important;
+  }
+  
+  .print\\:text-xl {
+    font-size: 1.25rem !important;
+  }
+  
+  .print\\:block {
+    display: block !important;
   }
 }
 
