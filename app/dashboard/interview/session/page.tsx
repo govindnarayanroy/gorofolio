@@ -72,6 +72,20 @@ export default function InterviewSession() {
     startTime: null
   })
 
+  // Initialize from URL parameters (for cover letter integration)
+  useEffect(() => {
+    const role = searchParams.get('role')
+    const jd = searchParams.get('jd')
+    
+    if (role) {
+      setCustomJobPosition(decodeURIComponent(role))
+    }
+    
+    if (jd) {
+      setJobDescription(decodeURIComponent(jd))
+    }
+  }, [searchParams])
+
   // Reset states when question changes
   useEffect(() => {
     console.log(`🔄 Resetting states for question ${interviewState.currentQuestionIndex}`)

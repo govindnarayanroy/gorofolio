@@ -89,6 +89,77 @@ export default function CoverLetterPage() {
     setJd(templates[domain as keyof typeof templates] || templates['Software Engineering']);
   };
 
+  // Function to extract domain from job description
+  const extractDomainFromJD = (jobDescription: string): string => {
+    const jdLower = jobDescription.toLowerCase();
+    
+    // Domain mapping based on keywords in job description
+    const domainKeywords = {
+      'marketing': ['marketing', 'brand', 'campaign', 'advertising', 'promotion', 'digital marketing'],
+      'sales': ['sales', 'revenue', 'selling', 'business development', 'account management'],
+      'pm': ['product manager', 'product management', 'roadmap', 'feature', 'product strategy'],
+      'engineering': ['engineer', 'developer', 'programming', 'software', 'technical', 'coding'],
+      'design': ['designer', 'design', 'ui', 'ux', 'user experience', 'interface'],
+      'data': ['data scientist', 'data analyst', 'analytics', 'machine learning', 'statistics']
+    };
+
+    // Find the best matching domain
+    for (const [domain, keywords] of Object.entries(domainKeywords)) {
+      if (keywords.some(keyword => jdLower.includes(keyword))) {
+        return domain;
+      }
+    }
+    
+    return 'general'; // fallback
+  };
+
+  // Function to extract job title from job description
+  const extractJobTitle = (jobDescription: string): string => {
+    const lines = jobDescription.split('\n');
+    const firstLine = lines[0] || '';
+    
+    // Look for common patterns like "We are looking for a [TITLE]" or "We are hiring a [TITLE]"
+    const patterns = [
+      /(?:looking for|seeking|hiring)\s+an?\s+([^.]+?)(?:\s+to|\s+who|\s+with|\.)/i,
+      /position.*?:\s*([^.]+)/i,
+      /role.*?:\s*([^.]+)/i
+    ];
+    
+    for (const pattern of patterns) {
+      const match = firstLine.match(pattern);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+    }
+    
+    // Fallback: try to extract from domain
+    const domain = extractDomainFromJD(jobDescription);
+    const domainTitles = {
+      'marketing': 'Marketing Professional',
+      'sales': 'Sales Professional', 
+      'pm': 'Product Manager',
+      'engineering': 'Software Engineer',
+      'design': 'Designer',
+      'data': 'Data Scientist'
+    };
+    
+    return domainTitles[domain as keyof typeof domainTitles] || 'Professional';
+  };
+
+  // Enhanced Practice Interview URL with context
+  const getPracticeInterviewUrl = () => {
+    if (!jd.trim()) {
+      return '/dashboard/interview';
+    }
+    
+    const domain = extractDomainFromJD(jd);
+    const jobTitle = extractJobTitle(jd);
+    const encodedJD = encodeURIComponent(jd);
+    const encodedTitle = encodeURIComponent(jobTitle);
+    
+    return `/dashboard/interview/session?domain=${domain}&role=${encodedTitle}&jd=${encodedJD}`;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center">
@@ -258,7 +329,7 @@ export default function CoverLetterPage() {
                       </div>
                       <div className="flex gap-2">
                         <Link 
-                          href="/dashboard/interview"
+                          href={getPracticeInterviewUrl()}
                           className="flex-1 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-colors text-sm font-medium text-center"
                         >
                           <Briefcase className="w-4 h-4 inline mr-1" />
