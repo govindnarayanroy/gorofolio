@@ -11,6 +11,9 @@ import { Plus, X, Save, ArrowRight, Loader2, User, Briefcase, GraduationCap, Cod
 import { Profile, Experience, Education } from '@/lib/types'
 import { getUserResume, saveResume } from '@/lib/database'
 import { toast } from 'sonner'
+import { BackToDashboard } from '@/components/BackToDashboard'
+import { ImageUpload } from '@/components/ImageUpload'
+import { ResumeDownload } from '@/components/ResumeDownload'
 
 export default function EditorPage() {
   const router = useRouter()
@@ -21,7 +24,8 @@ export default function EditorPage() {
     experiences: [],
     education: [],
     skills: [],
-    links: []
+    links: [],
+    image_url: undefined
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -195,6 +199,24 @@ export default function EditorPage() {
     }))
   }
 
+  const handleImageUploaded = (imageUrl: string) => {
+    setProfile(prev => ({
+      ...prev,
+      image_url: imageUrl
+    }))
+    // Auto-save when image is uploaded
+    handleSave()
+  }
+
+  const handleImageRemoved = () => {
+    setProfile(prev => ({
+      ...prev,
+      image_url: undefined
+    }))
+    // Auto-save when image is removed
+    handleSave()
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#020617] to-black flex items-center justify-center">
@@ -215,6 +237,9 @@ export default function EditorPage() {
       <div className="container mx-auto px-6 py-12">
         {/* Header */}
         <div className="text-center mb-12">
+          <div className="flex justify-center mb-6">
+            <BackToDashboard variant="header" />
+          </div>
           <h1 className="text-4xl font-extrabold text-white mb-4">
             Edit Your <span className="text-sky-400">Resume</span>
           </h1>
@@ -488,6 +513,26 @@ export default function EditorPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Image Upload */}
+          <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-slate-800">
+                <User className="h-5 w-5" />
+                Profile Image
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ImageUpload
+                currentImageUrl={profile.image_url}
+                onImageUploaded={handleImageUploaded}
+                onImageRemoved={handleImageRemoved}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Resume Download */}
+          <ResumeDownload profile={profile} />
 
           {/* Action Buttons */}
           <div className="flex justify-between items-center pt-8">

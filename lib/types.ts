@@ -2,7 +2,7 @@ export interface Experience {
     company: string;
     role: string;
     start: string; // "2022-04"
-    end?: string;  // undefined → “Present”
+    end?: string;  // undefined → "Present"
     bullets: string[];
   }
   
@@ -20,4 +20,5 @@ export interface Experience {
     education: Education[];
     skills: string[];
     links: { label: string; url: string }[];
+    image_url?: string;
   }

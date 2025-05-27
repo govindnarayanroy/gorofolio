@@ -19,7 +19,7 @@
 | Auth & Dashboard Sprint |    ✅   | agent | 2025‑01‑22   |
 | Editor Screen Sprint    |    ✅   | agent | 2025‑01‑26   |
 | User Flow Integration   |    ✅   | agent | 2025‑01‑26   |
-| Logic Polish            |    ⬜   | agent |    |
+| Logic Polish Sprint     |    ✅   | agent | 2025‑01‑26   |
 | CI/CD & tests           |    ⬜   | agent | —            |
 
 *(Tick ✅, update the date, and commit whenever a task finishes.)*
@@ -133,7 +133,7 @@ Rules inside the prompt:
 
 ---
 
-# 6 · Mock Interview Module ✅ COMPLETED
+# 6 · Mock Interview Module ✅ COMPLETED & ENHANCED
 
 | Component       | Stack                                                                     | Status |
 | --------------- | ------------------------------------------------------------------------- | ------ |
@@ -142,6 +142,28 @@ Rules inside the prompt:
 | **Q&A loop**    | Each answer → `chatLLM("groq","llama3-8b-8192")` scoring                | ✅ Working |
 | **Coach UI**    | `InterviewCoach.tsx` with Lottie animation during processing             | ✅ Working |
 | **Result card** | Total score (/10) + per-question feedback                               | ✅ Working |
+| **Dynamic Questions** | AI-generated questions for any job role/domain                    | ✅ Working |
+| **Routing Simplification** | Direct access to interview without domain selection page    | ✅ Working |
+
+### Latest Enhancements (January 2025):
+
+#### 🚀 **Dynamic Question Generation**
+- **Custom Domain Support**: Generate tailored questions for any job role (Marketing Manager, Sales Executive, etc.)
+- **AI-Powered**: Uses Groq LLM to create relevant interview questions based on job titles
+- **Fallback System**: Robust error handling with static question fallbacks
+- **Real-time Generation**: Questions generated and saved to database during session creation
+
+#### 🎯 **Routing Simplification** 
+- **Eliminated Extra Step**: Removed predetermined domain selection page
+- **Direct Access**: `/dashboard/interview` now redirects directly to `/dashboard/interview/session?domain=general`
+- **Seamless UX**: Users go straight from dashboard to interview setup
+- **Maintains Flexibility**: Still supports all domain types (marketing, sales, pm, etc.)
+
+#### 🔧 **Technical Improvements**
+- **Authentication Fixes**: Resolved session-details API authentication issues
+- **Database Optimization**: Fixed query methods from `.single()` to `.maybeSingle()`
+- **Duration Tracking**: Accurate interview duration calculation based on actual timestamps
+- **UI Polish**: Fixed button visibility and responsive design issues
 
 ### Architecture Changes Made:
 - **Removed FFmpeg dependency**: Used native `MediaRecorder` for browser audio capture
@@ -149,6 +171,17 @@ Rules inside the prompt:
 - **Per-question workflow**: Record → Stop → Transcribe → Score → Next Question
 - **Session management**: Complete interview flow with state persistence
 - **Real audio processing**: Variable file sizes (27KB-381KB) vs. previous mock data
+- **Dynamic routing**: Simplified user flow while maintaining all functionality
+
+### Testing Results:
+- ✅ **Marketing Manager at Apple India**: Successfully generated 10 tailored questions
+- ✅ **Sales Executive**: Dynamic question generation working
+- ✅ **General Domain**: Fallback questions generated successfully  
+- ✅ **Audio Recording**: Real WebM files (67KB) processed by Groq Whisper
+- ✅ **Transcription**: "Hello, I am a very good salesman. Thank you." → Score: 2/10
+- ✅ **Navigation**: "Back to Dashboard" button working perfectly
+- ✅ **Duration Display**: Realistic timing (2m 5s) instead of hours
+- ✅ **Results Page**: Proper scoring, feedback, and UI elements visible
 
 ### Key Features:
 - ✅ Real-time audio recording with visual feedback
@@ -157,6 +190,9 @@ Rules inside the prompt:
 - ✅ Per-question progress tracking
 - ✅ Clean submit/next question workflow
 - ✅ Interview completion with results summary
+- ✅ Dynamic question generation for any job role
+- ✅ Simplified routing with direct dashboard access
+- ✅ Comprehensive error handling and fallbacks
 
 ---
 

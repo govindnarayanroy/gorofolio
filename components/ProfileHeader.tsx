@@ -1,5 +1,5 @@
 import { Profile } from "@/lib/types";
-import Image from "next/image";
+import { ProfileImage } from "./ProfileImage";
 
 interface ProfileHeaderProps {
   profile: Profile;
@@ -8,13 +8,14 @@ interface ProfileHeaderProps {
 export function ProfileHeader({ profile }: ProfileHeaderProps) {
   return (
     <header className="text-center mb-8">
-      {/* Profile Photo Placeholder */}
+      {/* Profile Photo */}
       <div className="relative w-32 h-32 mx-auto mb-6">
-        <div className="w-full h-full bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
-          <span className="text-3xl font-bold text-white">
-            {profile.name.split(' ').map(n => n[0]).join('')}
-          </span>
-        </div>
+        <ProfileImage 
+          imageUrl={profile.image_url}
+          name={profile.name}
+          size="xl"
+          className="w-32 h-32"
+        />
       </div>
 
       {/* Name */}

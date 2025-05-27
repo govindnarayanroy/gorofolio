@@ -7,7 +7,9 @@ import { SkillsSection } from "@/components/SkillsSection";
 import { LinksList } from "@/components/LinksList";
 import { PublishButton } from "@/components/PublishButton";
 import { DownloadButton } from "@/components/DownloadButton";
+import { BackToDashboard } from "@/components/BackToDashboard";
 import { Profile } from "@/lib/types";
+import { PortfolioPublish } from "@/components/PortfolioPublish";
 
 interface ProfilePageProps {
   params: Promise<{ id: string }>;
@@ -69,11 +71,21 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       <div className="absolute bottom-20 right-20 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl"></div>
       
       <div className="relative max-w-4xl mx-auto px-6 py-12">
-        {/* Action Buttons */}
-        <div className="flex justify-end gap-4 mb-8 print:hidden">
-          <DownloadButton profileId={id} />
-          <PublishButton profileId={id} />
+        {/* Navigation and Action Buttons */}
+        <div className="flex justify-between items-center mb-8 print:hidden">
+          <BackToDashboard variant="button" />
+          <div className="flex gap-4">
+            <DownloadButton profileId={id} />
+            <PublishButton profileId={id} />
+          </div>
         </div>
+
+        {/* Portfolio Publishing Component */}
+        {!isDefaultProfile && (
+          <div className="mb-8 print:hidden">
+            <PortfolioPublish profileId={id} />
+          </div>
+        )}
 
         {/* Help Message for Empty Profile */}
         {isDefaultProfile && (

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Profile } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import { BackToDashboard } from "@/components/BackToDashboard";
 
 export default function IngestPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -83,12 +84,7 @@ export default function IngestPage() {
         <header className="bg-white/10 backdrop-blur-md border-b border-white/20">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
-              <Link href="/dashboard" className="flex items-center space-x-3 text-white hover:text-blue-200 transition-colors duration-300">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                <span className="text-lg font-semibold">Back to Dashboard</span>
-              </Link>
+              <BackToDashboard variant="header" />
               
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>

@@ -3,9 +3,13 @@ create table if not exists resumes (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete cascade,
   data jsonb,
+  image_url text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+
+-- Add image_url column if it doesn't exist (for existing databases)
+alter table resumes add column if not exists image_url text;
 
 -- Create portfolios table
 create table if not exists portfolios (

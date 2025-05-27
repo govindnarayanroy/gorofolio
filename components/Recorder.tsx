@@ -72,9 +72,9 @@ export function Recorder({ onRecordingComplete, onRecordingStateChange, maxDurat
   return (
     <div className="flex flex-col items-center gap-4">
       {/* Simple debug display */}
-      <div className="text-sm bg-gray-100 px-3 py-1 rounded-full border">
-        Status: <span className={isRecording ? "text-red-600 font-bold" : "text-green-600"}>{isRecording ? "RECORDING" : "READY"}</span>
-        {error && <span className="text-red-500 ml-2">| ERROR</span>}
+      <div className="text-sm bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full border border-white/20 text-white">
+        Status: <span className={isRecording ? "text-red-300 font-bold" : "text-green-300"}>{isRecording ? "RECORDING" : "READY"}</span>
+        {error && <span className="text-red-300 ml-2">| ERROR</span>}
       </div>
       
       {/* Main recording button */}
@@ -104,7 +104,7 @@ export function Recorder({ onRecordingComplete, onRecordingStateChange, maxDurat
         
         {/* Timer display */}
         {isRecording && (
-          <div className="absolute -right-20 top-1/2 -translate-y-1/2 bg-red-100 text-red-700 px-3 py-1 rounded-full border border-red-200">
+          <div className="absolute -right-20 top-1/2 -translate-y-1/2 bg-red-500/20 backdrop-blur-sm text-red-300 px-3 py-1 rounded-full border border-red-500/30">
             <div className="text-sm font-mono">{formatTime(timeLeft)}</div>
           </div>
         )}
@@ -112,11 +112,11 @@ export function Recorder({ onRecordingComplete, onRecordingStateChange, maxDurat
 
       {/* Error display */}
       {error && (
-        <div className="max-w-md text-center p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-600 font-medium mb-2">❌ {error}</p>
+        <div className="max-w-md text-center p-3 bg-red-500/20 backdrop-blur-sm border border-red-500/30 rounded-lg">
+          <p className="text-sm text-red-300 font-medium mb-2">❌ {error}</p>
           <button 
             onClick={clearError}
-            className="text-xs text-blue-500 hover:text-blue-700 underline"
+            className="text-xs text-blue-300 hover:text-blue-100 underline"
           >
             Clear error and try again
           </button>
@@ -126,14 +126,14 @@ export function Recorder({ onRecordingComplete, onRecordingStateChange, maxDurat
       {/* Instructions */}
       <div className="text-center max-w-md">
         {isRecording ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-            <p className="text-red-700 font-medium">🔴 Recording in progress</p>
-            <p className="text-red-600 text-sm mt-1">Click the STOP button when you're finished speaking</p>
+          <div className="bg-red-500/20 backdrop-blur-sm border border-red-500/30 rounded-lg p-3">
+            <p className="text-red-300 font-medium">🔴 Recording in progress</p>
+            <p className="text-red-200 text-sm mt-1">Click the STOP button when you're finished speaking</p>
           </div>
         ) : (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <p className="text-blue-700 font-medium">🎤 Ready to record</p>
-            <p className="text-blue-600 text-sm mt-1">Click the START button to begin recording your answer</p>
+          <div className="bg-blue-500/20 backdrop-blur-sm border border-blue-500/30 rounded-lg p-3">
+            <p className="text-blue-300 font-medium">🎤 Ready to record</p>
+            <p className="text-blue-200 text-sm mt-1">Click the START button to begin recording your answer</p>
           </div>
         )}
       </div>
