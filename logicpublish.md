@@ -101,7 +101,7 @@ Finalize the platform's dynamic interactivity, personalized cover letter generat
 | ---------------------------------------------- | :----: |
 | Dynamic domains for mock interview             |    ✅   |
 | Cover letter to mock interview connection      |    ✅   |
-| Dashboard state logic for resume/portfolio     |    ⬜   |
+| Dashboard state logic for resume/portfolio     |    ✅   |
 | Cover letter personalization using resume data |    ⬜   |
 | Resume optimization for job keywords           |    ⬜   |
 | QA/testing on all flows and device types       |    ✅   |
@@ -140,6 +140,23 @@ Finalize the platform's dynamic interactivity, personalized cover letter generat
 - **Testing**: Successfully tested with Marketing job description auto-fill
 - **Routing**: Preserves existing dashboard interview flow while adding enhanced context flow
 - **Status**: Fully functional with intelligent context transfer
+
+### ✅ Dashboard State Logic for Resume/Portfolio - COMPLETED
+- **Implementation**: Dynamic dashboard UI based on profile existence and completeness
+- **Features**:
+  - **Profile Detection**: Checks for existing resume data via `/api/resume` endpoint
+  - **Conditional UI**: Shows different buttons, text, and actions based on profile state
+  - **Personalization**: Welcome message changes from generic to personalized with user's name
+  - **Button States**: Enables/disables features based on profile availability
+  - **Progress Tracking**: Shows profile completion percentage and suggestions
+  - **Quick Actions**: Displays edit shortcuts for existing users
+  - **Activity Timeline**: Shows recent activity and interview history
+- **State Logic**:
+  - **Without Profile**: "Welcome to Gorofolio!" + "Create Profile" buttons + disabled features
+  - **With Profile**: "Welcome back, [Name]!" + "Edit Profile" buttons + enabled features
+- **Data Structure**: Handles nested API response `{ data: { data: profileData } }`
+- **Testing**: Successfully tested both states via MCP browser automation
+- **Status**: Fully functional with proper state management and UI updates
 
 ### ✅ QA/Testing - COMPLETED  
 - **Audio Recording**: Real WebM files (67KB) processed successfully

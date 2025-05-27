@@ -54,8 +54,9 @@ export function DashboardOverview({ className = "" }: DashboardOverviewProps) {
           fetch('/api/interview/sessions?limit=5').then(res => res.json())
         ]);
         
-        if (resumeResponse?.data) {
-          setProfile(resumeResponse.data);
+        if (resumeResponse?.data?.data) {
+          // The API returns nested data: { data: { data: profileData } }
+          setProfile(resumeResponse.data.data);
         }
         
         if (sessionsResponse.success) {
