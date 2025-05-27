@@ -52,6 +52,14 @@ export default function PreviewPage() {
     loadProfile();
   }, []);
 
+  // Enhanced print function for better A4 alignment
+  const handlePrintResume = () => {
+    // Add a small delay to ensure styles are applied
+    setTimeout(() => {
+      window.print();
+    }, 100);
+  };
+
   if (isLoading) {
     return (
       <main className="mx-auto max-w-6xl space-y-6 px-6 py-10">
@@ -83,7 +91,7 @@ export default function PreviewPage() {
 
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-6 py-10">
-      <div className="mb-6">
+      <div className="mb-6 print:hidden">
         <div className="flex items-center justify-between mb-4">
           <BackToDashboard variant="minimal" />
         </div>
@@ -99,7 +107,7 @@ export default function PreviewPage() {
       {/* Action Buttons */}
       <div className="flex flex-wrap gap-4 print:hidden">
         <Button
-          onClick={() => window.print()}
+          onClick={handlePrintResume}
           className="bg-sky-600 hover:bg-sky-700"
         >
           <Download className="w-4 h-4 mr-2" />
@@ -129,7 +137,7 @@ export default function PreviewPage() {
       <div className={`${showOptimizer ? 'flex flex-col xl:flex-row gap-6' : 'flex justify-center'}`}>
         {/* Resume Preview */}
         <div className={`${showOptimizer ? 'xl:flex-1 xl:max-w-4xl' : 'w-full max-w-4xl mx-auto'} space-y-4`}>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="flex items-center gap-2 text-sm text-gray-600 print:hidden">
             <Eye className="w-4 h-4" />
             Resume Preview
           </div>
@@ -140,7 +148,7 @@ export default function PreviewPage() {
 
         {/* Resume Optimizer */}
         {showOptimizer && profile.name !== defaultProfile.name && (
-          <div className="xl:w-96 xl:flex-shrink-0 space-y-4">
+          <div className="xl:w-96 xl:flex-shrink-0 space-y-4 print:hidden">
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Target className="w-4 h-4" />
               Resume Optimization

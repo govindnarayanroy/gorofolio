@@ -3,11 +3,96 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Print-specific rules */
+/* Enhanced Print-specific rules for A4 PDF alignment */
 @media print {
-  @page { size: A4 portrait; margin: 12mm 14mm; }
-  nav, button { display: none !important; } /* hide nav & buttons */
-  html, body { background: white; }
+  @page { 
+    size: A4 portrait; 
+    margin: 8mm 15mm 8mm 15mm;
+    /* Hide browser default headers and footers */
+    @top-left { content: ""; }
+    @top-center { content: ""; }
+    @top-right { content: ""; }
+    @bottom-left { content: ""; }
+    @bottom-center { content: ""; }
+    @bottom-right { content: ""; }
+  }
+  
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  html, body { 
+    background: white !important;
+    font-size: 11pt !important;
+    line-height: 1.3 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Hide everything except the resume */
+  body > * {
+    display: none !important;
+  }
+  
+  /* Show only the main content */
+  body > main {
+    display: block !important;
+    margin-top: -3mm !important;
+    padding-top: 0 !important;
+  }
+  
+  /* Hide all navigation, buttons, and non-resume elements */
+  nav, 
+  button, 
+  .no-print,
+  header:not(article header),
+  footer:not(article footer),
+  .print\\:hidden,
+  [class*="Button"],
+  [class*="button"],
+  .sticky,
+  .fixed {
+    display: none !important;
+  }
+  
+  /* Hide all content except the resume article */
+  main > * {
+    display: none !important;
+  }
+  
+  /* Show only the resume preview container */
+  main > div:has(article) {
+    display: block !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+  
+  /* Show the resume article */
+  article {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: white !important;
+  }
+  
+  /* Ensure proper page breaks */
+  .page-break-inside-avoid {
+    page-break-inside: avoid;
+  }
+  
+  /* Hide any remaining UI elements */
+  .flex:has(button),
+  .space-y-4:has(button),
+  div:has(.bg-sky-600),
+  div:has(.bg-purple-600) {
+    display: none !important;
+  }
 }
 
 @layer base {

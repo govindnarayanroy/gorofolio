@@ -30,36 +30,62 @@ const ResumePreview = forwardRef<HTMLElement, { profile: Profile }>(
       }
     };
 
+    // Function to format date from YYYY-MM to Month Year
+    const formatDate = (dateString: string | null | undefined) => {
+      if (!dateString || dateString === 'Present') return dateString;
+      
+      try {
+        // Handle YYYY-MM format
+        if (dateString.includes('-')) {
+          const [year, month] = dateString.split('-');
+          const monthNames = [
+            'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+          ];
+          const monthIndex = parseInt(month) - 1;
+          if (monthIndex >= 0 && monthIndex < 12) {
+            return `${monthNames[monthIndex]} ${year}`;
+          }
+        }
+        
+        // If it's already in a different format, return as is
+        return dateString;
+      } catch (error) {
+        console.warn('Error formatting date:', error);
+        return dateString;
+      }
+    };
+
     return (
       <article
         ref={ref}
-        className="mx-auto w-full max-w-[210mm] bg-white print:px-0 print:py-0 print:w-[210mm] shadow-lg border border-gray-200"
+        className="mx-auto w-full max-w-[210mm] bg-white shadow-lg border border-gray-200 print:shadow-none print:border-none print:w-full print:max-w-none print:block print:m-0 print:p-0 print:mt-0"
         style={{ minHeight: "297mm" }}
       >
         {/* Modern Header with Accent Color */}
-        <header className="relative bg-gradient-to-r from-slate-900 to-slate-800 text-white px-8 py-8 print:px-6 print:py-6">
-          <div className="flex items-start gap-6">
+        <header className="relative bg-gradient-to-r from-slate-900 to-slate-800 text-white px-8 py-8 print:bg-slate-800 print:px-4 print:py-3 print:mt-0">
+          <div className="flex items-start gap-6 print:gap-3">
             <ProfileImage 
               imageUrl={profile.image_url}
               name={profile.name}
               size="xl"
-              className="print:w-20 print:h-20 border-4 border-white/20 shadow-xl"
+              className="border-4 border-white/20 shadow-xl print:w-12 print:h-12 print:border-2"
             />
             <div className="flex-1">
-              <h1 className="text-4xl font-bold mb-2 print:text-3xl tracking-tight">
+              <h1 className="text-4xl font-bold mb-2 tracking-tight print:text-2xl print:mb-1">
                 {profile.name}
               </h1>
-              <p className="text-xl text-slate-200 mb-4 print:text-lg font-light">
+              <p className="text-xl text-slate-200 mb-4 font-light print:text-base print:mb-2">
                 {profile.headline}
               </p>
               
               {/* Contact Information */}
               {profile.links && profile.links.length > 0 && (
-                <div className="flex flex-wrap gap-4 text-sm text-slate-300">
+                <div className="flex flex-wrap gap-4 text-sm text-slate-300 print:gap-2 print:text-xs">
                   {profile.links.slice(0, 3).filter(link => link && link.url).map((link, index) => (
-                    <div key={index} className="flex items-center gap-2">
+                    <div key={index} className="flex items-center gap-2 print:gap-1">
                       {getContactIcon(link.label)}
-                      <span className="print:text-xs">{link.url.replace(/^https?:\/\//, '')}</span>
+                      <span>{link.url.replace(/^https?:\/\//, '')}</span>
                     </div>
                   ))}
                 </div>
@@ -68,13 +94,13 @@ const ResumePreview = forwardRef<HTMLElement, { profile: Profile }>(
           </div>
           
           {/* Decorative accent line */}
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500 print:hidden"></div>
         </header>
 
-        <div className="px-8 py-6 print:px-6 print:py-4">
+        <div className="px-8 py-6 print:px-4 print:py-3">
           {/* Professional Summary */}
-          <section className="mb-8 print:mb-6">
-            <h2 className="text-lg font-bold text-slate-800 mb-3 pb-2 border-b-2 border-slate-200 print:text-base">
+          <section className="mb-8 print:mb-4">
+            <h2 className="text-lg font-bold text-slate-800 mb-3 pb-2 border-b-2 border-slate-200 print:text-base print:mb-2 print:pb-1">
               Professional Summary
             </h2>
             <p className="text-slate-700 leading-relaxed text-justify print:text-sm">
@@ -84,11 +110,11 @@ const ResumePreview = forwardRef<HTMLElement, { profile: Profile }>(
 
           {/* Experience Section */}
           {(profile.experiences ?? []).length > 0 && (
-            <section className="mb-8 print:mb-6">
-              <h2 className="text-lg font-bold text-slate-800 mb-4 pb-2 border-b-2 border-slate-200 print:text-base">
+            <section className="mb-8 print:mb-4">
+              <h2 className="text-lg font-bold text-slate-800 mb-4 pb-2 border-b-2 border-slate-200 print:text-base print:mb-2 print:pb-1">
                 Professional Experience
               </h2>
-              <div className="space-y-6 print:space-y-4">
+              <div className="space-y-6 print:space-y-3">
                 {profile.experiences.map((exp, index) => (
                   <div key={exp.company + exp.role} className="relative">
                     {/* Timeline dot */}
@@ -97,22 +123,22 @@ const ResumePreview = forwardRef<HTMLElement, { profile: Profile }>(
                     <div className="pl-6 print:pl-0">
                       <div className="flex justify-between items-start mb-2 print:mb-1">
                         <div>
-                          <h3 className="text-lg font-semibold text-slate-800 print:text-base">
+                          <h3 className="text-lg font-semibold text-slate-800 print:text-sm print:font-bold">
                             {exp.role}
                           </h3>
-                          <p className="text-blue-600 font-medium print:text-sm">
+                          <p className="text-blue-600 font-medium print:text-sm print:text-slate-700">
                             {exp.company}
                           </p>
                         </div>
-                        <span className="text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-full print:text-xs print:bg-transparent print:px-0">
-                          {exp.start} – {exp.end ?? "Present"}
+                        <span className="text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-full print:text-xs print:bg-transparent print:px-0 print:py-0">
+                          {formatDate(exp.start)} – {formatDate(exp.end) ?? "Present"}
                         </span>
                       </div>
                       
                       <ul className="space-y-2 print:space-y-1">
                         {exp.bullets.map((bullet, i) => (
-                          <li key={i} className="text-slate-700 leading-relaxed print:text-sm flex items-start">
-                            <span className="text-blue-500 mr-3 mt-1.5 print:mt-1">•</span>
+                          <li key={i} className="text-slate-700 leading-relaxed flex items-start print:text-sm">
+                            <span className="text-blue-500 mr-3 mt-1.5 print:mr-2 print:mt-1 print:text-slate-600">•</span>
                             <span>{bullet}</span>
                           </li>
                         ))}
@@ -125,20 +151,20 @@ const ResumePreview = forwardRef<HTMLElement, { profile: Profile }>(
           )}
 
           {/* Two-column layout for Education and Skills */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 print:grid-cols-2 print:gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 print:grid-cols-2 print:gap-4">
             {/* Education */}
             {(profile.education ?? []).length > 0 && (
               <section>
-                <h2 className="text-lg font-bold text-slate-800 mb-4 pb-2 border-b-2 border-slate-200 print:text-base">
+                <h2 className="text-lg font-bold text-slate-800 mb-4 pb-2 border-b-2 border-slate-200 print:text-base print:mb-2 print:pb-1">
                   Education
                 </h2>
                 <div className="space-y-3 print:space-y-2">
                   {profile.education.map((ed, index) => (
                     <div key={ed.school} className="bg-slate-50 p-4 rounded-lg print:bg-transparent print:p-0">
-                      <h3 className="font-semibold text-slate-800 print:text-sm">
+                      <h3 className="font-semibold text-slate-800 print:text-sm print:font-bold">
                         {ed.degree}
                       </h3>
-                      <p className="text-blue-600 font-medium print:text-sm">
+                      <p className="text-blue-600 font-medium print:text-sm print:text-slate-700">
                         {ed.school}
                       </p>
                       <p className="text-sm text-slate-500 print:text-xs">
@@ -153,14 +179,14 @@ const ResumePreview = forwardRef<HTMLElement, { profile: Profile }>(
             {/* Skills */}
             {(profile.skills ?? []).length > 0 && (
               <section>
-                <h2 className="text-lg font-bold text-slate-800 mb-4 pb-2 border-b-2 border-slate-200 print:text-base">
+                <h2 className="text-lg font-bold text-slate-800 mb-4 pb-2 border-b-2 border-slate-200 print:text-base print:mb-2 print:pb-1">
                   Core Competencies
                 </h2>
-                <div className="grid grid-cols-2 gap-2 print:grid-cols-1">
+                <div className="grid grid-cols-2 gap-2 print:grid-cols-1 print:gap-1">
                   {profile.skills.map((skill, index) => (
                     <div
                       key={skill}
-                      className="bg-gradient-to-r from-blue-50 to-purple-50 text-slate-700 px-3 py-2 rounded-lg text-sm font-medium print:bg-transparent print:border print:border-slate-300 print:text-xs"
+                      className="bg-gradient-to-r from-blue-50 to-purple-50 text-slate-700 px-3 py-2 rounded-lg text-sm font-medium print:bg-transparent print:border print:border-slate-300 print:text-xs print:px-1 print:py-0"
                     >
                       {skill}
                     </div>
@@ -172,8 +198,8 @@ const ResumePreview = forwardRef<HTMLElement, { profile: Profile }>(
 
           {/* Additional Links */}
           {profile.links && profile.links.length > 3 && (
-            <section className="mt-8 print:mt-6">
-              <h2 className="text-lg font-bold text-slate-800 mb-4 pb-2 border-b-2 border-slate-200 print:text-base">
+            <section className="mt-8 print:mt-4">
+              <h2 className="text-lg font-bold text-slate-800 mb-4 pb-2 border-b-2 border-slate-200 print:text-base print:mb-2 print:pb-1">
                 Additional Links
               </h2>
               <div className="grid grid-cols-2 gap-3 print:grid-cols-1 print:gap-1">
@@ -181,7 +207,7 @@ const ResumePreview = forwardRef<HTMLElement, { profile: Profile }>(
                   <div key={index} className="flex items-center gap-2 text-sm text-slate-600 print:text-xs">
                     {getContactIcon(link.label)}
                     <span className="font-medium">{link.label || 'Link'}:</span>
-                    <span className="text-blue-600">{link.url.replace(/^https?:\/\//, '')}</span>
+                    <span className="text-blue-600 print:text-slate-700">{link.url.replace(/^https?:\/\//, '')}</span>
                   </div>
                 ))}
               </div>
@@ -190,8 +216,8 @@ const ResumePreview = forwardRef<HTMLElement, { profile: Profile }>(
         </div>
 
         {/* Footer with subtle branding */}
-        <footer className="mt-auto px-8 py-4 border-t border-slate-200 print:px-6 print:py-2">
-          <div className="text-center text-xs text-slate-400 print:hidden">
+        <footer className="mt-auto px-8 py-4 border-t border-slate-200 print:hidden">
+          <div className="text-center text-xs text-slate-400">
             Generated with Gorofolio • Professional Resume Builder
           </div>
         </footer>
