@@ -22,13 +22,17 @@ Create **`prompts/parse-resume.md`**
 
 ```md
 ## System
+
 You are an AI that converts raw résumé text into valid JSON matching the `Profile` schema.
 
 ## Instructions
+
 SRC:
 ```
+
 {{resume_text}}
-```
+
+````
 
 Return **ONLY** this JSON:
 
@@ -52,17 +56,18 @@ Return **ONLY** this JSON:
   "skills": [],
   "links": []
 }
-```
+````
 
-*Do not wrap in Markdown fences; no additional keys.*
-```
+_Do not wrap in Markdown fences; no additional keys._
+
+````
 
 Commit:
 
 ```bash
 git add prompts/parse-resume.md
 git commit -m "docs(prompts): resume-parse template"
-```
+````
 
 ---
 
@@ -71,48 +76,45 @@ git commit -m "docs(prompts): resume-parse template"
 Create **`app/api/ingest/route.ts`**
 
 ```ts
-import { NextResponse } from "next/server";
-import pdf from "pdf-parse";
-import { chatLLM } from "@/lib/llmClient";
-import { Profile } from "@/lib/types";
-import fs from "node:fs/promises";
-import path from "node:path";
+import { NextResponse } from 'next/server'
+import pdf from 'pdf-parse'
+import { chatLLM } from '@/lib/llmClient'
+import { Profile } from '@/lib/types'
+import fs from 'node:fs/promises'
+import path from 'node:path'
 
-const MAX_SIZE = 4 * 1024 * 1024; // 4 MB
+const MAX_SIZE = 4 * 1024 * 1024 // 4 MB
 
 export async function POST(req: Request) {
   try {
-    const form = await req.formData();
-    const file = form.get("file") as File;
+    const form = await req.formData()
+    const file = form.get('file') as File
 
     if (!file || file.size > MAX_SIZE)
-      return NextResponse.json({ error: "Missing or too‑large file" }, { status: 400 });
+      return NextResponse.json({ error: 'Missing or too‑large file' }, { status: 400 })
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const { text } = await pdf(buffer);
+    const buffer = Buffer.from(await file.arrayBuffer())
+    const { text } = await pdf(buffer)
 
-    const tpl = await fs.readFile(
-      path.join(process.cwd(), "prompts/parse-resume.md"),
-      "utf8"
-    );
-    const prompt = tpl.replace("{{resume_text}}", text.slice(0, 60000));
+    const tpl = await fs.readFile(path.join(process.cwd(), 'prompts/parse-resume.md'), 'utf8')
+    const prompt = tpl.replace('{{resume_text}}', text.slice(0, 60000))
 
-    const res = await chatLLM("groq", "llama3-8b-8192", [
-      { role: "system", content: "You are a helpful assistant." },
-      { role: "user", content: prompt },
-    ]);
+    const res = await chatLLM('groq', 'llama3-8b-8192', [
+      { role: 'system', content: 'You are a helpful assistant.' },
+      { role: 'user', content: prompt },
+    ])
 
-    let profile: Profile;
+    let profile: Profile
     try {
-      profile = JSON.parse(res.content ?? "");
+      profile = JSON.parse(res.content ?? '')
     } catch {
-      throw new Error("LLM did not return valid JSON");
+      throw new Error('LLM did not return valid JSON')
     }
 
-    return NextResponse.json({ profile });
+    return NextResponse.json({ profile })
   } catch (err) {
-    console.error("Ingestion error:", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    console.error('Ingestion error:', err)
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
 }
 ```
@@ -131,19 +133,19 @@ git commit -m "feat(api): initial résumé ingestion route"
 Create **`app/dashboard/ingest/page.tsx`**
 
 ```tsx
-"use client";
-import { useState } from "react";
+'use client'
+import { useState } from 'react'
 
 export default function IngestPage() {
-  const [file, setFile] = useState<File>();
-  const [profile, setProfile] = useState<any>(null);
+  const [file, setFile] = useState<File>()
+  const [profile, setProfile] = useState<any>(null)
 
   async function upload() {
-    if (!file) return;
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await fetch("/api/ingest", { method: "POST", body: fd }).then(r => r.json());
-    setProfile(res.profile);
+    if (!file) return
+    const fd = new FormData()
+    fd.append('file', file)
+    const res = await fetch('/api/ingest', { method: 'POST', body: fd }).then(r => r.json())
+    setProfile(res.profile)
   }
 
   return (
@@ -163,7 +165,7 @@ export default function IngestPage() {
         </pre>
       )}
     </main>
-  );
+  )
 }
 ```
 
@@ -178,9 +180,9 @@ git commit -m "feat(ui): résumé ingestion demo page"
 
 ## 4 · Manual test
 
-* `pnpm run dev`
-* Visit **/dashboard/ingest**
-* Upload any PDF résumé → should display parsed JSON.
+- `pnpm run dev`
+- Visit **/dashboard/ingest**
+- Upload any PDF résumé → should display parsed JSON.
 
 ---
 
@@ -188,7 +190,7 @@ git commit -m "feat(ui): résumé ingestion demo page"
 
 ```ts
 // after parsing
-await supabase.from("profiles").insert({ profile });
+await supabase.from('profiles').insert({ profile })
 ```
 
 ---

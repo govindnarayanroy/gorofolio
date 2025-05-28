@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
 export async function POST(request: NextRequest) {
   try {
     const { sessionId, questionId, questionIndex, answer, score, feedback } = await request.json()
-    
+
     // Create server-side Supabase client
     const cookieStore = await cookies()
     const supabase = createServerClient(
@@ -30,14 +30,20 @@ export async function POST(request: NextRequest) {
         },
       }
     )
-    
+
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
     if (authError || !user) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'User not authenticated' 
-      }, { status: 401 })
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'User not authenticated',
+        },
+        { status: 401 }
+      )
     }
 
     // Prepare the data to insert
@@ -52,7 +58,7 @@ export async function POST(request: NextRequest) {
     if (score !== undefined && score !== null) {
       insertData.score = score
     }
-    
+
     if (feedback !== undefined && feedback !== null) {
       // Convert feedback array to JSONB format expected by database
       if (Array.isArray(feedback)) {
@@ -71,23 +77,29 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Error adding interview answer:', error)
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Failed to add interview answer' 
-      }, { status: 500 })
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Failed to add interview answer',
+        },
+        { status: 500 }
+      )
     }
-    
+
     console.log('✅ Answer submitted successfully:', data)
-    
-    return NextResponse.json({ 
-      success: true, 
-      data 
+
+    return NextResponse.json({
+      success: true,
+      data,
     })
   } catch (error) {
     console.error('Error adding interview answer:', error)
-    return NextResponse.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    }, { status: 500 })
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    )
   }
-} 
+}

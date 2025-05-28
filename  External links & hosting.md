@@ -35,56 +35,80 @@ Build a complete, beautiful, and hostable portfolio page that renders a user’s
 ### `lib/profiles.ts`
 
 ```ts
-import { Profile } from "@/lib/types";
+import { Profile } from '@/lib/types'
 const DUMMY: Record<string, Profile> = {
-  "123": { /* example JSON */ },
-};
+  '123': {
+    /* example JSON */
+  },
+}
 export function getProfileById(id: string): Profile | null {
-  return DUMMY[id] ?? null;
+  return DUMMY[id] ?? null
 }
 ```
 
 ### `components/LinksList.tsx`
 
 ```tsx
-"use client";
-import { FaLink, FaGithub, FaBehance, FaLinkedin, FaHuggingface } from "react-icons/fa";
+'use client'
+import { FaLink, FaGithub, FaBehance, FaLinkedin, FaHuggingface } from 'react-icons/fa'
 
 export function LinksList({ links }: { links: { platform: string; url: string }[] }) {
   const ICONS: Record<string, JSX.Element> = {
-    github: <FaGithub size={20} />, behance: <FaBehance size={20} />, linkedin: <FaLinkedin size={20} />, huggingface: <FaHuggingface size={20} />
-  };
+    github: <FaGithub size={20} />,
+    behance: <FaBehance size={20} />,
+    linkedin: <FaLinkedin size={20} />,
+    huggingface: <FaHuggingface size={20} />,
+  }
   return (
-    <div className="flex flex-wrap gap-4 print:hidden mt-6">
+    <div className="mt-6 flex flex-wrap gap-4 print:hidden">
       {links.map((l, i) => (
-        <a key={i} href={l.url} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-gray-800 hover:text-blue-600">
-          {ICONS[l.platform.toLowerCase()] ?? <FaLink size={20} />}<span className="text-sm">{l.platform}</span>
+        <a
+          key={i}
+          href={l.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center space-x-2 text-gray-800 hover:text-blue-600"
+        >
+          {ICONS[l.platform.toLowerCase()] ?? <FaLink size={20} />}
+          <span className="text-sm">{l.platform}</span>
         </a>
       ))}
     </div>
-  );
+  )
 }
 ```
 
 ### `components/PublishButton.tsx`
 
 ```tsx
-"use client";
-import { useState } from "react";
+'use client'
+import { useState } from 'react'
 
 export default function PublishButton() {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false)
   async function handlePublish() {
-    setLoading(true);
-    const res = await fetch("/api/portfolio/export");
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = "portfolio.zip"; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-    setLoading(false);
+    setLoading(true)
+    const res = await fetch('/api/portfolio/export')
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'portfolio.zip'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+    setLoading(false)
   }
-  return (<button onClick={handlePublish} disabled={loading} className="ml-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
-    {loading ? "Publishing…" : "Publish Portfolio"}
-  </button>);
+  return (
+    <button
+      onClick={handlePublish}
+      disabled={loading}
+      className="ml-4 rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+    >
+      {loading ? 'Publishing…' : 'Publish Portfolio'}
+    </button>
+  )
 }
 ```
 

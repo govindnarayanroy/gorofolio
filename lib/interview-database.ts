@@ -56,8 +56,10 @@ export async function createInterviewSession(
   customJobPosition?: string
 ): Promise<InterviewSession | null> {
   const supabase = createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const { data, error } = await supabase
@@ -208,12 +210,12 @@ export async function updateInterviewAnswer(
   return data
 }
 
-export async function getUserInterviewSessions(
-  limit: number = 10
-): Promise<InterviewSession[]> {
+export async function getUserInterviewSessions(limit: number = 10): Promise<InterviewSession[]> {
   const supabase = createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) return []
 
   const { data, error } = await supabase
@@ -238,7 +240,9 @@ export async function getInterviewSessionWithDetails(
 
   try {
     // Get current user
-    const { data: { user } } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     if (!user) {
       console.error('User not authenticated')
       return null
@@ -367,4 +371,4 @@ export async function getServerInterviewSessionWithDetails(
     questions: questions || [],
     answers: answers || [],
   }
-} 
+}

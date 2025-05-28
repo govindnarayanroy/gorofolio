@@ -1,134 +1,130 @@
-"use client";
+'use client'
 
-import { useState, useRef } from 'react';
-import { Upload, X, User, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { useState, useRef } from 'react'
+import { Upload, X, User, Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 interface ImageUploadProps {
-  currentImageUrl?: string | null;
-  onImageUploaded: (imageUrl: string) => void;
-  onImageRemoved: () => void;
-  className?: string;
+  currentImageUrl?: string | null
+  onImageUploaded: (imageUrl: string) => void
+  onImageRemoved: () => void
+  className?: string
 }
 
-export function ImageUpload({ 
-  currentImageUrl, 
-  onImageUploaded, 
-  onImageRemoved, 
-  className = "" 
+export function ImageUpload({
+  currentImageUrl,
+  onImageUploaded,
+  onImageRemoved,
+  className = '',
 }: ImageUploadProps) {
-  const [isUploading, setIsUploading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(currentImageUrl || null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(currentImageUrl || null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const file = event.target.files?.[0]
+    if (!file) return
 
     // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
     if (!allowedTypes.includes(file.type)) {
-      toast.error('Please select a valid image file (JPEG, PNG, or WebP)');
-      return;
+      toast.error('Please select a valid image file (JPEG, PNG, or WebP)')
+      return
     }
 
     // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image file must be smaller than 5MB');
-      return;
+      toast.error('Image file must be smaller than 5MB')
+      return
     }
 
     // Show preview immediately
-    const objectUrl = URL.createObjectURL(file);
-    setPreviewUrl(objectUrl);
+    const objectUrl = URL.createObjectURL(file)
+    setPreviewUrl(objectUrl)
 
-    setIsUploading(true);
+    setIsUploading(true)
 
     try {
-      const formData = new FormData();
-      formData.append('image', file);
+      const formData = new FormData()
+      formData.append('image', file)
 
       const response = await fetch('/api/upload-image', {
         method: 'POST',
         body: formData,
-      });
+      })
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Upload failed');
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Upload failed')
       }
 
-      const data = await response.json();
-      
+      const data = await response.json()
+
       // Clean up object URL
-      URL.revokeObjectURL(objectUrl);
-      
+      URL.revokeObjectURL(objectUrl)
+
       // Update with actual uploaded URL
-      setPreviewUrl(data.imageUrl);
-      onImageUploaded(data.imageUrl);
-      
-      toast.success('Profile image uploaded successfully!');
+      setPreviewUrl(data.imageUrl)
+      onImageUploaded(data.imageUrl)
+
+      toast.success('Profile image uploaded successfully!')
     } catch (error) {
-      console.error('Upload error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to upload image');
-      
+      console.error('Upload error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to upload image')
+
       // Revert preview on error
-      URL.revokeObjectURL(objectUrl);
-      setPreviewUrl(currentImageUrl || null);
+      URL.revokeObjectURL(objectUrl)
+      setPreviewUrl(currentImageUrl || null)
     } finally {
-      setIsUploading(false);
+      setIsUploading(false)
       // Reset file input
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = ''
       }
     }
-  };
+  }
 
   const handleRemoveImage = () => {
-    setPreviewUrl(null);
-    onImageRemoved();
-    toast.success('Profile image removed');
-  };
+    setPreviewUrl(null)
+    onImageRemoved()
+    toast.success('Profile image removed')
+  }
 
   const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
+    fileInputRef.current?.click()
+  }
 
   return (
     <div className={`space-y-4 ${className}`}>
       <div className="flex items-center gap-4">
         {/* Image Preview */}
         <div className="relative">
-          <div className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 border-4 border-white shadow-lg">
+          <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-white bg-gradient-to-br from-blue-100 to-purple-100 shadow-lg">
             {previewUrl ? (
-              <img 
-                src={previewUrl} 
-                alt="Profile" 
-                className="w-full h-full object-cover"
-              />
+              <img src={previewUrl} alt="Profile" className="h-full w-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <User className="w-8 h-8 text-gray-400" />
+              <div className="flex h-full w-full items-center justify-center">
+                <User className="h-8 w-8 text-gray-400" />
               </div>
             )}
           </div>
-          
+
           {/* Loading overlay */}
           {isUploading && (
-            <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-              <Loader2 className="w-6 h-6 text-white animate-spin" />
+            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50">
+              <Loader2 className="h-6 w-6 animate-spin text-white" />
             </div>
           )}
-          
+
           {/* Remove button */}
           {previewUrl && !isUploading && (
             <button
               onClick={handleRemoveImage}
-              className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors"
+              className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white transition-colors hover:bg-red-600"
               title="Remove image"
             >
-              <X className="w-3 h-3" />
+              <X className="h-3 w-3" />
             </button>
           )}
         </div>
@@ -143,10 +139,10 @@ export function ImageUpload({
               size="sm"
               className="border-blue-200 text-blue-600 hover:bg-blue-50"
             >
-              <Upload className="w-4 h-4 mr-2" />
+              <Upload className="mr-2 h-4 w-4" />
               {previewUrl ? 'Change Photo' : 'Upload Photo'}
             </Button>
-            
+
             {previewUrl && (
               <Button
                 onClick={handleRemoveImage}
@@ -159,10 +155,8 @@ export function ImageUpload({
               </Button>
             )}
           </div>
-          
-          <p className="text-xs text-gray-500">
-            JPEG, PNG, or WebP • Max 5MB
-          </p>
+
+          <p className="text-xs text-gray-500">JPEG, PNG, or WebP • Max 5MB</p>
         </div>
       </div>
 
@@ -175,5 +169,5 @@ export function ImageUpload({
         className="hidden"
       />
     </div>
-  );
-} 
+  )
+}

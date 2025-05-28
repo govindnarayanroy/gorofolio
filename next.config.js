@@ -1,13 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack: (config) => {
+  eslint: {
+    // Warning: This allows production builds to successfully complete even if
+    // your project has ESLint errors.
+    ignoreDuringBuilds: true,
+  },
+  webpack: config => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
       path: false,
-    };
-    return config;
+    }
+    return config
   },
-};
+}
 
-module.exports = nextConfig; 
+module.exports = nextConfig

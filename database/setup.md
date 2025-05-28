@@ -8,7 +8,7 @@ Since we don't have the Supabase CLI configured, you can manually create the req
 
 1. Go to your Supabase project dashboard
 2. Navigate to the SQL Editor
-3. Copy and paste the SQL from `schema.sql` 
+3. Copy and paste the SQL from `schema.sql`
 4. Click "Run" to execute the commands
 
 ### Tables Created:
@@ -22,4 +22,4 @@ The schema includes RLS policies that ensure users can only access their own dat
 
 ### Next Steps:
 
-After running the schema, your Editor Sprint functionality will be ready to use! 
+After running the schema, your Editor Sprint functionality will be ready to use!

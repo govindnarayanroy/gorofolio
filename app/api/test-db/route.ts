@@ -28,16 +28,22 @@ export async function GET(request: NextRequest) {
         },
       }
     )
-    
+
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
     if (authError || !user) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'User not authenticated',
-        user: user ? 'exists' : 'null',
-        authError: authError?.message
-      }, { status: 401 })
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'User not authenticated',
+          user: user ? 'exists' : 'null',
+          authError: authError?.message,
+        },
+        { status: 401 }
+      )
     }
 
     // Test database tables
@@ -49,16 +55,16 @@ export async function GET(request: NextRequest) {
         .from('interview_sessions')
         .select('*')
         .limit(1)
-      
+
       results.interview_sessions = {
         exists: !sessionsError,
         error: sessionsError?.message,
-        count: sessions?.length || 0
+        count: sessions?.length || 0,
       }
     } catch (err) {
       results.interview_sessions = {
         exists: false,
-        error: err instanceof Error ? err.message : 'Unknown error'
+        error: err instanceof Error ? err.message : 'Unknown error',
       }
     }
 
@@ -68,16 +74,16 @@ export async function GET(request: NextRequest) {
         .from('interview_questions')
         .select('*')
         .limit(1)
-      
+
       results.interview_questions = {
         exists: !questionsError,
         error: questionsError?.message,
-        count: questions?.length || 0
+        count: questions?.length || 0,
       }
     } catch (err) {
       results.interview_questions = {
         exists: false,
-        error: err instanceof Error ? err.message : 'Unknown error'
+        error: err instanceof Error ? err.message : 'Unknown error',
       }
     }
 
@@ -87,32 +93,35 @@ export async function GET(request: NextRequest) {
         .from('interview_answers')
         .select('*')
         .limit(1)
-      
+
       results.interview_answers = {
         exists: !answersError,
         error: answersError?.message,
-        count: answers?.length || 0
+        count: answers?.length || 0,
       }
     } catch (err) {
       results.interview_answers = {
         exists: false,
-        error: err instanceof Error ? err.message : 'Unknown error'
+        error: err instanceof Error ? err.message : 'Unknown error',
       }
     }
-    
-    return NextResponse.json({ 
-      success: true, 
+
+    return NextResponse.json({
+      success: true,
       user: {
         id: user.id,
-        email: user.email
+        email: user.email,
       },
-      tables: results
+      tables: results,
     })
   } catch (error) {
     console.error('Error testing database:', error)
-    return NextResponse.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    }, { status: 500 })
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    )
   }
-} 
+}

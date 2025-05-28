@@ -10,60 +10,62 @@ Finalize the platform's dynamic interactivity, personalized cover letter generat
 
 ### 1. Dynamic Domains for Mock Interview
 
-* Make the mock interview module domains dynamic based on the user's resume or portfolio data (skills, job titles, education).
-* Populate the domain dropdown/list in the mock interview page using this data.
-* Allow user to add new custom domains as needed.
+- Make the mock interview module domains dynamic based on the user's resume or portfolio data (skills, job titles, education).
+- Populate the domain dropdown/list in the mock interview page using this data.
+- Allow user to add new custom domains as needed.
 
 ---
 
 ### 2. Connect Cover Letter Generation to Mock Interview
 
-* After a user generates a cover letter, offer a "Practice Interview" or "Mock Interview for this Role" button.
-* Pass the job title/role as context to the mock interview module, so questions are relevant.
+- After a user generates a cover letter, offer a "Practice Interview" or "Mock Interview for this Role" button.
+- Pass the job title/role as context to the mock interview module, so questions are relevant.
 
 ---
 
 ### 3. Dashboard State Changes if Resume/Portfolio Exists
 
-* When a user has a saved resume or portfolio, the dashboard displays:
+- When a user has a saved resume or portfolio, the dashboard displays:
 
-  * "Edit" or "View" instead of "Create"
-  * Quick links to edit or view portfolio/resume
-* If not, prompt the user to create new resume/portfolio.
+  - "Edit" or "View" instead of "Create"
+  - Quick links to edit or view portfolio/resume
+
+- If not, prompt the user to create new resume/portfolio.
 
 ---
 
 ### 4. Cover Letter Personalization with Resume Data
 
-* When generating a cover letter, fetch the user's parsed resume data from Supabase.
-* Pass relevant fields (experience, skills, education, summary, etc.) as context to the LLM prompt for highly personalized letters.
+- When generating a cover letter, fetch the user's parsed resume data from Supabase.
+- Pass relevant fields (experience, skills, education, summary, etc.) as context to the LLM prompt for highly personalized letters.
 
 ---
 
 ### 5. Resume Optimization for Job Description Keywords
 
-* Add an option in the cover letter generator: "Optimize my resume for this job."
-* If selected, analyze the provided job description and compare it to the user's resume data.
-* Suggest missing keywords or skills that would help the user match the job better.
-* Allow user to directly edit or insert these keywords into their resume.
-* Save updated resume back to Supabase.
+- Add an option in the cover letter generator: "Optimize my resume for this job."
+- If selected, analyze the provided job description and compare it to the user's resume data.
+- Suggest missing keywords or skills that would help the user match the job better.
+- Allow user to directly edit or insert these keywords into their resume.
+- Save updated resume back to Supabase.
 
 ---
 
 ### 6. QA, Testing, and Deployment Prep
 
-* Thoroughly test all new and existing features, including:
+- Thoroughly test all new and existing features, including:
 
-  * Image upload and display logic
-  * Conditional rendering for profile image/avatar
-  * Dynamic domain population in mock interview
-  * Cover letter to mock interview flow
-  * Dashboard state logic
-  * Cover letter personalization
-  * Resume optimization
-* Perform cross-device and cross-browser checks.
-* Fix all UI/UX inconsistencies and confirm error states/feedback.
-* Prepare for final deployment.
+  - Image upload and display logic
+  - Conditional rendering for profile image/avatar
+  - Dynamic domain population in mock interview
+  - Cover letter to mock interview flow
+  - Dashboard state logic
+  - Cover letter personalization
+  - Resume optimization
+
+- Perform cross-device and cross-browser checks.
+- Fix all UI/UX inconsistencies and confirm error states/feedback.
+- Prepare for final deployment.
 
 ---
 
@@ -99,39 +101,41 @@ Finalize the platform's dynamic interactivity, personalized cover letter generat
 
 | Task                                           | Status |
 | ---------------------------------------------- | :----: |
-| Dynamic domains for mock interview             |    ✅   |
-| Cover letter to mock interview connection      |    ✅   |
-| Dashboard state logic for resume/portfolio     |    ✅   |
-| Cover letter personalization using resume data |    ✅   |
-| Resume optimization for job keywords           |    ✅   |
-| QA/testing on all flows and device types       |    ✅   |
-| Cross-browser and UX polish                    |    ✅   |
-| Prepare for production deployment              |    ⬜   |
+| Dynamic domains for mock interview             |   ✅   |
+| Cover letter to mock interview connection      |   ✅   |
+| Dashboard state logic for resume/portfolio     |   ✅   |
+| Cover letter personalization using resume data |   ✅   |
+| Resume optimization for job keywords           |   ✅   |
+| QA/testing on all flows and device types       |   ✅   |
+| Cross-browser and UX polish                    |   ✅   |
+| Prepare for production deployment              |   ⬜   |
 
 ---
 
 ## Dev Notes
 
-* Pull dynamic domains by scanning user's resume/portfolio fields.
-* Pass job title context from cover letter module to mock interview.
-* Use Supabase queries to check if resume/portfolio exists for dashboard state.
-* Pass parsed resume data as context for personalized cover letters.
-* Compare job description with resume data to suggest/insert missing keywords.
-* Prioritize QA/bugfix and polish for launch readiness.
+- Pull dynamic domains by scanning user's resume/portfolio fields.
+- Pass job title context from cover letter module to mock interview.
+- Use Supabase queries to check if resume/portfolio exists for dashboard state.
+- Pass parsed resume data as context for personalized cover letters.
+- Compare job description with resume data to suggest/insert missing keywords.
+- Prioritize QA/bugfix and polish for launch readiness.
 
 ---
 
 ## Implementation Notes
 
 ### ✅ Dynamic Domains for Mock Interview - COMPLETED
+
 - **Implementation**: AI-powered dynamic question generation for any job role
 - **Features**: Custom domain detection, fallback to static questions, database persistence
 - **Testing**: Successfully tested with Marketing Manager, Sales Executive, and General roles
 - **Status**: Fully functional with real-time question generation
 
-### ✅ Cover Letter to Mock Interview Connection - COMPLETED  
+### ✅ Cover Letter to Mock Interview Connection - COMPLETED
+
 - **Implementation**: Seamless context passing from cover letter page to interview module
-- **Features**: 
+- **Features**:
   - Auto-domain detection from job description keywords
   - Job title extraction using regex patterns
   - URL parameter encoding for role and job description
@@ -142,6 +146,7 @@ Finalize the platform's dynamic interactivity, personalized cover letter generat
 - **Status**: Fully functional with intelligent context transfer
 
 ### ✅ Dashboard State Logic for Resume/Portfolio - COMPLETED
+
 - **Implementation**: Dynamic dashboard UI based on profile existence and completeness
 - **Features**:
   - **Profile Detection**: Checks for existing resume data via `/api/resume` endpoint
@@ -159,6 +164,7 @@ Finalize the platform's dynamic interactivity, personalized cover letter generat
 - **Status**: Fully functional with proper state management and UI updates
 
 ### ✅ Cover Letter Personalization Using Resume Data - COMPLETED
+
 - **Implementation**: AI-powered cover letter generation using actual user profile data
 - **Features**:
   - **Profile Integration**: Fetches user's resume data from Supabase via `/api/resume` endpoint
@@ -176,6 +182,7 @@ Finalize the platform's dynamic interactivity, personalized cover letter generat
 - **Status**: Fully functional with comprehensive profile data integration
 
 ### ✅ Resume Optimization for Job Keywords - COMPLETED
+
 - **Implementation**: AI-powered resume analysis and optimization against job descriptions
 - **Features**:
   - **Match Score Calculation**: Quantitative analysis showing percentage match (e.g., 54%)
@@ -194,7 +201,8 @@ Finalize the platform's dynamic interactivity, personalized cover letter generat
 - **Testing Results**: Successfully analyzed Govind's resume against Senior Marketing Manager role, providing actionable insights and specific keyword recommendations
 - **Status**: Fully functional with comprehensive analysis and actionable recommendations
 
-### ✅ QA/Testing - COMPLETED  
+### ✅ QA/Testing - COMPLETED
+
 - **Audio Recording**: Real WebM files (67KB) processed successfully
 - **Transcription**: Groq Whisper working with actual audio input
 - **Scoring**: LLM scoring providing detailed feedback (2/10 with improvement tips)
@@ -205,6 +213,7 @@ Finalize the platform's dynamic interactivity, personalized cover letter generat
 - **Resume Optimization**: Successfully tested with comprehensive keyword analysis and recommendations
 
 ### ✅ Cross-browser and UX Polish - COMPLETED
+
 - **UI Fixes**: Button visibility and layout issues resolved
 - **Responsive Design**: Mobile-first approach with proper breakpoints
 - **Error Handling**: Comprehensive fallbacks for API failures

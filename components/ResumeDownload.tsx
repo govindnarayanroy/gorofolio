@@ -1,42 +1,42 @@
-"use client";
+'use client'
 
-import { useState } from 'react';
-import { Download, FileText, Palette, Briefcase } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Profile } from '@/lib/types';
+import { useState } from 'react'
+import { Download, FileText, Palette, Briefcase } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Profile } from '@/lib/types'
 
 interface ResumeDownloadProps {
-  profile: Profile;
-  className?: string;
+  profile: Profile
+  className?: string
 }
 
-type ResumeStyle = 'modern' | 'creative' | 'professional';
+type ResumeStyle = 'modern' | 'creative' | 'professional'
 
 const styles = {
   modern: {
     name: 'Modern',
     description: 'Clean, minimalist design with subtle colors',
-    icon: <FileText className="w-5 h-5" />,
-    preview: 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200'
+    icon: <FileText className="h-5 w-5" />,
+    preview: 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200',
   },
   creative: {
     name: 'Creative',
     description: 'Bold design with vibrant colors and unique layout',
-    icon: <Palette className="w-5 h-5" />,
-    preview: 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200'
+    icon: <Palette className="h-5 w-5" />,
+    preview: 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200',
   },
   professional: {
     name: 'Professional',
     description: 'Traditional, corporate-friendly format',
-    icon: <Briefcase className="w-5 h-5" />,
-    preview: 'bg-gradient-to-br from-gray-50 to-slate-50 border-gray-200'
-  }
-};
+    icon: <Briefcase className="h-5 w-5" />,
+    preview: 'bg-gradient-to-br from-gray-50 to-slate-50 border-gray-200',
+  },
+}
 
-export function ResumeDownload({ profile, className = "" }: ResumeDownloadProps) {
-  const [selectedStyle, setSelectedStyle] = useState<ResumeStyle>('modern');
-  const [isDownloading, setIsDownloading] = useState(false);
+export function ResumeDownload({ profile, className = '' }: ResumeDownloadProps) {
+  const [selectedStyle, setSelectedStyle] = useState<ResumeStyle>('modern')
+  const [isDownloading, setIsDownloading] = useState(false)
 
   const generatePDFContent = (style: ResumeStyle) => {
     const baseStyles = `
@@ -194,7 +194,7 @@ export function ResumeDownload({ profile, className = "" }: ResumeDownloadProps)
           .no-print { display: none !important; }
         }
       </style>
-    `;
+    `
 
     const styleSpecific = {
       modern: `
@@ -221,20 +221,20 @@ export function ResumeDownload({ profile, className = "" }: ResumeDownloadProps)
         .company { color: #4b5563; }
         .bullets li:before { color: #6b7280; }
         .skill { background: #f9fafb; color: #374151; border: 1px solid #d1d5db; }
-      `
-    };
+      `,
+    }
 
     // Helper function to safely get string value
     const safeString = (value: any): string => {
-      if (value === null || value === undefined) return '';
-      return String(value);
-    };
+      if (value === null || value === undefined) return ''
+      return String(value)
+    }
 
     // Helper function to safely clean URL
     const cleanUrl = (url: string): string => {
-      if (!url) return '';
-      return url.replace(/^https?:\/\//, '');
-    };
+      if (!url) return ''
+      return url.replace(/^https?:\/\//, '')
+    }
 
     return `
       <!DOCTYPE html>
@@ -250,14 +250,22 @@ export function ResumeDownload({ profile, className = "" }: ResumeDownloadProps)
             <div class="header">
               <h1 class="name">${safeString(profile.name)}</h1>
               <p class="title">${safeString(profile.headline)}</p>
-              ${profile.links && profile.links.length > 0 ? `
+              ${
+                profile.links && profile.links.length > 0
+                  ? `
                 <div class="contact-info">
-                  ${profile.links.slice(0, 3).map(link => {
-                    if (!link || !link.label || !link.url) return '';
-                    return `<span>${safeString(link.label)}: ${cleanUrl(safeString(link.url))}</span>`;
-                  }).filter(Boolean).join('')}
+                  ${profile.links
+                    .slice(0, 3)
+                    .map(link => {
+                      if (!link || !link.label || !link.url) return ''
+                      return `<span>${safeString(link.label)}: ${cleanUrl(safeString(link.url))}</span>`
+                    })
+                    .filter(Boolean)
+                    .join('')}
                 </div>
-              ` : ''}
+              `
+                  : ''
+              }
             </div>
             
             <div class="section">
@@ -265,12 +273,15 @@ export function ResumeDownload({ profile, className = "" }: ResumeDownloadProps)
               <p>${safeString(profile.summary)}</p>
             </div>
             
-            ${profile.experiences && profile.experiences.length > 0 ? `
+            ${
+              profile.experiences && profile.experiences.length > 0
+                ? `
               <div class="section">
                 <h2 class="section-title">Professional Experience</h2>
-                ${profile.experiences.map(exp => {
-                  if (!exp) return '';
-                  return `
+                ${profile.experiences
+                  .map(exp => {
+                    if (!exp) return ''
+                    return `
                     <div class="experience-item">
                       <div class="job-header">
                         <div>
@@ -280,78 +291,99 @@ export function ResumeDownload({ profile, className = "" }: ResumeDownloadProps)
                         <div class="date">${safeString(exp.start)} - ${safeString(exp.end) || 'Present'}</div>
                       </div>
                       <ul class="bullets">
-                        ${(exp.bullets || []).map(bullet => bullet ? `<li>${safeString(bullet)}</li>` : '').filter(Boolean).join('')}
+                        ${(exp.bullets || [])
+                          .map(bullet => (bullet ? `<li>${safeString(bullet)}</li>` : ''))
+                          .filter(Boolean)
+                          .join('')}
                       </ul>
                     </div>
-                  `;
-                }).filter(Boolean).join('')}
+                  `
+                  })
+                  .filter(Boolean)
+                  .join('')}
               </div>
-            ` : ''}
+            `
+                : ''
+            }
             
             <div class="two-column">
-              ${profile.education && profile.education.length > 0 ? `
+              ${
+                profile.education && profile.education.length > 0
+                  ? `
                 <div class="section">
                   <h2 class="section-title">Education</h2>
-                  ${profile.education.map(edu => {
-                    if (!edu) return '';
-                    return `
+                  ${profile.education
+                    .map(edu => {
+                      if (!edu) return ''
+                      return `
                       <div class="education-item">
                         <div class="degree">${safeString(edu.degree)}</div>
                         <div class="school">${safeString(edu.school)}</div>
                         <div class="year">${safeString(edu.year)}</div>
                       </div>
-                    `;
-                  }).filter(Boolean).join('')}
+                    `
+                    })
+                    .filter(Boolean)
+                    .join('')}
                 </div>
-              ` : ''}
+              `
+                  : ''
+              }
               
-              ${profile.skills && profile.skills.length > 0 ? `
+              ${
+                profile.skills && profile.skills.length > 0
+                  ? `
                 <div class="section">
                   <h2 class="section-title">Core Competencies</h2>
                   <div class="skills-grid">
-                    ${profile.skills.map(skill => skill ? `<div class="skill">${safeString(skill)}</div>` : '').filter(Boolean).join('')}
+                    ${profile.skills
+                      .map(skill => (skill ? `<div class="skill">${safeString(skill)}</div>` : ''))
+                      .filter(Boolean)
+                      .join('')}
                   </div>
                 </div>
-              ` : ''}
+              `
+                  : ''
+              }
             </div>
           </div>
         </body>
       </html>
-    `;
-  };
+    `
+  }
 
   const handleDownload = async (style: ResumeStyle) => {
-    setIsDownloading(true);
-    
+    setIsDownloading(true)
+
     try {
-      const htmlContent = generatePDFContent(style);
-      
+      const htmlContent = generatePDFContent(style)
+
       // Create a new window for printing
-      const printWindow = window.open('', '_blank', 'width=800,height=600');
-      
+      const printWindow = window.open('', '_blank', 'width=800,height=600')
+
       if (printWindow) {
-        printWindow.document.write(htmlContent);
-        printWindow.document.close();
-        
+        printWindow.document.write(htmlContent)
+        printWindow.document.close()
+
         // Wait for content to load
         printWindow.onload = () => {
           // Focus and print
-          printWindow.focus();
+          printWindow.focus()
           setTimeout(() => {
-            printWindow.print();
-            printWindow.close();
-          }, 250);
-        };
+            printWindow.print()
+            printWindow.close()
+          }, 250)
+        }
       }
     } catch (error) {
-      console.error('Download failed:', error);
+      console.error('Download failed:', error)
     } finally {
-      setIsDownloading(false);
+      setIsDownloading(false)
     }
-  };
+  }
 
   return (
-    <Card className={`bg-white/95 backdrop-blur-sm border-0 shadow-2xl ${className}`}>
+    <Card className={`border-0 bg-white/95 shadow-2xl backdrop-blur-sm ${className}`}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-slate-800">
           <Download className="h-5 w-5" />
@@ -367,14 +399,16 @@ export function ResumeDownload({ profile, className = "" }: ResumeDownloadProps)
               <button
                 key={key}
                 onClick={() => setSelectedStyle(key as ResumeStyle)}
-                className={`p-4 rounded-lg border-2 transition-all duration-200 text-left ${
+                className={`rounded-lg border-2 p-4 text-left transition-all duration-200 ${
                   selectedStyle === key
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-lg border-2 flex items-center justify-center ${style.preview}`}>
+                  <div
+                    className={`flex h-12 w-12 items-center justify-center rounded-lg border-2 ${style.preview}`}
+                  >
                     {style.icon}
                   </div>
                   <div className="flex-1">
@@ -382,8 +416,8 @@ export function ResumeDownload({ profile, className = "" }: ResumeDownloadProps)
                     <div className="text-sm text-slate-600">{style.description}</div>
                   </div>
                   {selectedStyle === key && (
-                    <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                    <div className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-500">
+                      <div className="h-2 w-2 rounded-full bg-white"></div>
                     </div>
                   )}
                 </div>
@@ -396,25 +430,25 @@ export function ResumeDownload({ profile, className = "" }: ResumeDownloadProps)
         <Button
           onClick={() => handleDownload(selectedStyle)}
           disabled={isDownloading}
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
         >
           {isDownloading ? (
             <>
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
               Generating PDF...
             </>
           ) : (
             <>
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="mr-2 h-4 w-4" />
               Download {styles[selectedStyle].name} Resume
             </>
           )}
         </Button>
 
-        <p className="text-xs text-slate-500 text-center">
+        <p className="text-center text-xs text-slate-500">
           PDF will be generated without watermarks or timestamps
         </p>
       </CardContent>
     </Card>
-  );
-} 
+  )
+}

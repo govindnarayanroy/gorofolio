@@ -1,93 +1,97 @@
-export const runtime = "nodejs";
+export const runtime = 'nodejs'
 
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase-server";
-import { Profile } from "@/lib/types";
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase-server'
+import { Profile } from '@/lib/types'
 
 export async function GET() {
   try {
-    const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
+    const supabase = await createClient()
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { data, error } = await supabase
       .from('resumes')
       .select('*')
       .eq('user_id', user.id)
-      .single();
+      .single()
 
     if (error && error.code !== 'PGRST116') {
-      console.error('Error fetching resume:', error);
-      return NextResponse.json({ error: "Failed to fetch resume" }, { status: 500 });
+      console.error('Error fetching resume:', error)
+      return NextResponse.json({ error: 'Failed to fetch resume' }, { status: 500 })
     }
 
-    return NextResponse.json({ data });
+    return NextResponse.json({ data })
   } catch (error) {
-    console.error('Resume GET error:', error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error('Resume GET error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
 export async function POST(req: Request) {
   try {
-    const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
+    const supabase = await createClient()
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const profileData: Profile = await req.json();
+    const profileData: Profile = await req.json()
 
     // Check if resume exists
     const { data: existing } = await supabase
       .from('resumes')
       .select('id')
       .eq('user_id', user.id)
-      .single();
+      .single()
 
-    let result;
+    let result
     if (existing) {
       // Update existing resume
       const { data, error } = await supabase
         .from('resumes')
-        .update({ 
+        .update({
           data: profileData,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('user_id', user.id)
         .select()
-        .single();
+        .single()
 
       if (error) {
-        console.error('Error updating resume:', error);
-        return NextResponse.json({ error: "Failed to update resume" }, { status: 500 });
+        console.error('Error updating resume:', error)
+        return NextResponse.json({ error: 'Failed to update resume' }, { status: 500 })
       }
-      result = data;
+      result = data
     } else {
       // Create new resume
       const { data, error } = await supabase
         .from('resumes')
         .insert({
           user_id: user.id,
-          data: profileData
+          data: profileData,
         })
         .select()
-        .single();
+        .single()
 
       if (error) {
-        console.error('Error creating resume:', error);
-        return NextResponse.json({ error: "Failed to create resume" }, { status: 500 });
+        console.error('Error creating resume:', error)
+        return NextResponse.json({ error: 'Failed to create resume' }, { status: 500 })
       }
-      result = data;
+      result = data
     }
 
-    return NextResponse.json({ data: result });
+    return NextResponse.json({ data: result })
   } catch (error) {
-    console.error('Resume POST error:', error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error('Resume POST error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-} 
+}

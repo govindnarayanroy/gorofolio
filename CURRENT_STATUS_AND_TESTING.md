@@ -1,6 +1,7 @@
 # Current Status & Testing Checklist
 
 ## ✅ Server Status: RUNNING SUCCESSFULLY
+
 - 🟢 **Server:** Running at http://localhost:3000
 - 🟢 **Compilation:** Clean compilation without FFmpeg errors
 - 🟢 **Components:** All have proper "use client" directives
@@ -9,14 +10,17 @@
 ## 🔍 Critical Tests Needed
 
 ### 1. **Audio Recording Test (HIGHEST PRIORITY)**
+
 Navigate to: `http://localhost:3000/dashboard/interview/session?domain=backend`
 
 **Expected Behavior:**
+
 - ✅ Audio level indicator should show green bars when you speak
 - ✅ Each recording should produce DIFFERENT file sizes (not 226,104 bytes)
 - ✅ Console should show unique blob hashes for each recording
 
 **Look for these console messages:**
+
 ```
 🎤 Starting fresh recording session...
 🔊 Audio level: XX% (when speaking)
@@ -25,15 +29,18 @@ Navigate to: `http://localhost:3000/dashboard/interview/session?domain=backend`
 ```
 
 **🚨 RED FLAGS to watch for:**
+
 - All recordings are exactly 226,104 bytes
 - Identical blob hashes between recordings
 - No audio level activity when speaking
 - "Empty audio file" or "No audio data recorded" errors
 
 ### 2. **Environment Variables Test**
+
 Watch the console for STT API calls:
 
 **Expected:**
+
 ```
 🔑 Environment variables check:
   - GROQ_API_KEY exists: true
@@ -43,6 +50,7 @@ Watch the console for STT API calls:
 ```
 
 **Current Issue:**
+
 ```
 🔑 Environment variables check:
   - GROQ_API_KEY exists: false
@@ -52,11 +60,13 @@ Watch the console for STT API calls:
 ## 🎯 Testing Instructions
 
 1. **Open the interview session:**
+
    ```
    http://localhost:3000/dashboard/interview/session?domain=backend
    ```
 
 2. **Test audio recording:**
+
    - Click the microphone button
    - Speak clearly for 3-5 seconds
    - Watch the green audio level bars (should respond to your voice)
@@ -64,6 +74,7 @@ Watch the console for STT API calls:
    - Check console for blob details
 
 3. **Repeat the test 3 times:**
+
    - Each recording should have a different file size
    - Each should generate a different blob hash
 
@@ -85,4 +96,4 @@ Watch the console for STT API calls:
 
 ---
 
-**Test it now and report what you see in the console!** 🧪 
+**Test it now and report what you see in the console!** 🧪

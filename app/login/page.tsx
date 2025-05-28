@@ -44,42 +44,40 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 overflow-hidden">
+    <div className="min-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
       {/* Background Effects - Same as landing page */}
       <div className="absolute inset-0 bg-gradient-to-r from-blue-600/15 via-transparent to-purple-600/15"></div>
       <div className="absolute inset-0 bg-gradient-to-t from-slate-900/30 via-transparent to-transparent"></div>
-      <div className="absolute top-20 left-20 w-96 h-96 bg-blue-500/25 rounded-full blur-3xl animate-pulse"></div>
-      <div className="absolute bottom-20 right-20 w-[600px] h-[600px] bg-purple-500/15 rounded-full blur-3xl"></div>
-      <div className="absolute top-1/3 left-1/3 w-80 h-80 bg-indigo-400/10 rounded-full blur-2xl"></div>
+      <div className="absolute left-20 top-20 h-96 w-96 animate-pulse rounded-full bg-blue-500/25 blur-3xl"></div>
+      <div className="absolute bottom-20 right-20 h-[600px] w-[600px] rounded-full bg-purple-500/15 blur-3xl"></div>
+      <div className="absolute left-1/3 top-1/3 h-80 w-80 rounded-full bg-indigo-400/10 blur-2xl"></div>
 
-      <div className="relative flex items-center justify-center min-h-screen px-6 py-12">
+      <div className="relative flex min-h-screen items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
           {/* Logo Section */}
-          <div className="text-center mb-8">
+          <div className="mb-8 text-center">
             <Link href="/" className="inline-block">
-              <div className="relative w-24 h-24 mx-auto mb-4 group">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-xl group-hover:blur-2xl transition-all duration-700"></div>
+              <div className="group relative mx-auto mb-4 h-24 w-24">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400/20 to-purple-400/20 blur-xl transition-all duration-700 group-hover:blur-2xl"></div>
                 <Image
                   src="/images/logo.png"
                   alt="GoRoFolio"
                   fill
-                  className="object-contain drop-shadow-2xl relative z-10 transition-transform duration-500 group-hover:scale-105"
+                  className="relative z-10 object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-105"
                 />
               </div>
             </Link>
-            <h1 className="text-3xl font-bold text-white mb-2">
-              Welcome to GoRoFolio
-            </h1>
+            <h1 className="mb-2 text-3xl font-bold text-white">Welcome to GoRoFolio</h1>
             <p className="text-blue-200/80">
               {isSignUp ? 'Create your account to get started' : 'Sign in to your account'}
             </p>
           </div>
 
           {/* Auth Form */}
-          <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 shadow-2xl">
+          <div className="rounded-3xl border border-white/20 bg-white/10 p-8 shadow-2xl backdrop-blur-md">
             <form onSubmit={handleAuth} className="space-y-6">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
+                <label htmlFor="email" className="mb-2 block text-sm font-medium text-white">
                   Email address
                 </label>
                 <input
@@ -87,14 +85,14 @@ export default function LoginPage() {
                   type="email"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                  onChange={e => setEmail(e.target.value)}
+                  className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-white placeholder-white/60 transition-all duration-300 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter your email"
                 />
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-white mb-2">
+                <label htmlFor="password" className="mb-2 block text-sm font-medium text-white">
                   Password
                 </label>
                 <input
@@ -102,18 +100,20 @@ export default function LoginPage() {
                   type="password"
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                  onChange={e => setPassword(e.target.value)}
+                  className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-white placeholder-white/60 transition-all duration-300 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter your password"
                 />
               </div>
 
               {message && (
-                <div className={`p-4 rounded-xl text-sm ${
-                  message.includes('Check your email') 
-                    ? 'bg-green-500/20 text-green-200 border border-green-500/30' 
-                    : 'bg-red-500/20 text-red-200 border border-red-500/30'
-                }`}>
+                <div
+                  className={`rounded-xl p-4 text-sm ${
+                    message.includes('Check your email')
+                      ? 'border border-green-500/30 bg-green-500/20 text-green-200'
+                      : 'border border-red-500/30 bg-red-500/20 text-red-200'
+                  }`}
+                >
                   {message}
                 </div>
               )}
@@ -121,15 +121,17 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:from-blue-500 hover:via-cyan-400 hover:to-blue-400 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/40 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="w-full rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 px-6 py-4 font-bold text-white transition-all duration-300 hover:scale-105 hover:from-blue-500 hover:via-cyan-400 hover:to-blue-400 hover:shadow-2xl hover:shadow-blue-500/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                    <div className="mr-2 h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
                     {isSignUp ? 'Creating Account...' : 'Signing In...'}
                   </div>
+                ) : isSignUp ? (
+                  'Create Account'
                 ) : (
-                  isSignUp ? 'Create Account' : 'Sign In'
+                  'Sign In'
                 )}
               </button>
             </form>
@@ -141,20 +143,17 @@ export default function LoginPage() {
                   setIsSignUp(!isSignUp)
                   setMessage('')
                 }}
-                className="text-blue-300 hover:text-blue-200 transition-colors duration-300"
+                className="text-blue-300 transition-colors duration-300 hover:text-blue-200"
               >
-                {isSignUp 
-                  ? 'Already have an account? Sign in' 
-                  : "Don't have an account? Sign up"
-                }
+                {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
               </button>
             </div>
 
             {/* Back to Home */}
             <div className="mt-4 text-center">
-              <Link 
+              <Link
                 href="/"
-                className="text-white/60 hover:text-white transition-colors duration-300 text-sm"
+                className="text-sm text-white/60 transition-colors duration-300 hover:text-white"
               >
                 ← Back to Home
               </Link>
@@ -164,4 +163,4 @@ export default function LoginPage() {
       </div>
     </div>
   )
-} 
+}

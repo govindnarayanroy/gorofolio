@@ -1,18 +1,18 @@
 // components/PdfDownloadButton.tsx
-"use client";
-import { RefObject } from "react";
-import { useReactToPrint } from "react-to-print";
+'use client'
+import { RefObject } from 'react'
+import { useReactToPrint } from 'react-to-print'
 
 export function PdfDownloadButton({
   targetRef,
   children,
 }: {
-  targetRef: RefObject<HTMLElement>;
-  children: React.ReactNode;
+  targetRef: RefObject<HTMLElement>
+  children: React.ReactNode
 }) {
   const handlePrint = useReactToPrint({
     contentRef: targetRef,
-  });
+  })
 
   return (
     <button
@@ -21,5 +21,5 @@ export function PdfDownloadButton({
     >
       {children}
     </button>
-  );
+  )
 }

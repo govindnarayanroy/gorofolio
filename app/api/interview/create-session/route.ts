@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
 export async function POST(request: NextRequest) {
   try {
     const { domain, jobDescription, customJobPosition } = await request.json()
-    
+
     // Create server-side Supabase client
     const cookieStore = await cookies()
     const supabase = createServerClient(
@@ -30,14 +30,20 @@ export async function POST(request: NextRequest) {
         },
       }
     )
-    
+
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
     if (authError || !user) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'User not authenticated' 
-      }, { status: 401 })
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'User not authenticated',
+        },
+        { status: 401 }
+      )
     }
 
     // Create interview session
@@ -54,21 +60,27 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Error creating interview session:', error)
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Failed to create interview session' 
-      }, { status: 500 })
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Failed to create interview session',
+        },
+        { status: 500 }
+      )
     }
-    
-    return NextResponse.json({ 
-      success: true, 
-      data 
+
+    return NextResponse.json({
+      success: true,
+      data,
     })
   } catch (error) {
     console.error('Error creating interview session:', error)
-    return NextResponse.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    }, { status: 500 })
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    )
   }
-} 
+}

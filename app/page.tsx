@@ -1,7 +1,7 @@
-import Hero from "@/components/Hero";
-import { Features } from "@/components/Features";
-import { Integrations } from "@/components/Integrations";
-import { Footer } from "@/components/Footer";
+import Hero from '@/components/Hero'
+import { Features } from '@/components/Features'
+import { Integrations } from '@/components/Integrations'
+import { Footer } from '@/components/Footer'
 
 export default function Page() {
   return (
@@ -11,5 +11,5 @@ export default function Page() {
       <Integrations />
       <Footer />
     </>
-  );
+  )
 }

@@ -70,8 +70,10 @@ export async function saveResume(profileData: Profile): Promise<ResumeRecord | n
 
 export async function getUserPortfolio(): Promise<PortfolioRecord | null> {
   const supabase = createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) return null
 
   const { data, error } = await supabase
@@ -88,23 +90,28 @@ export async function getUserPortfolio(): Promise<PortfolioRecord | null> {
   return data
 }
 
-export async function savePortfolio(url: string, resumeId: string): Promise<PortfolioRecord | null> {
+export async function savePortfolio(
+  url: string,
+  resumeId: string
+): Promise<PortfolioRecord | null> {
   const supabase = createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   // Check if portfolio exists
   const existing = await getUserPortfolio()
-  
+
   if (existing) {
     // Update existing portfolio
     const { data, error } = await supabase
       .from('portfolios')
-      .update({ 
+      .update({
         url,
         resume_id: resumeId,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', existing.id)
       .select()
@@ -123,7 +130,7 @@ export async function savePortfolio(url: string, resumeId: string): Promise<Port
       .insert({
         user_id: user.id,
         url,
-        resume_id: resumeId
+        resume_id: resumeId,
       })
       .select()
       .single()
@@ -135,4 +142,4 @@ export async function savePortfolio(url: string, resumeId: string): Promise<Port
 
     return data
   }
-} 
+}

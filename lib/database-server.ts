@@ -22,11 +22,7 @@ export interface PortfolioRecord {
 export async function getServerUserResume(userId: string): Promise<ResumeRecord | null> {
   const supabase = await createServerClient()
 
-  const { data, error } = await supabase
-    .from('resumes')
-    .select('*')
-    .eq('user_id', userId)
-    .single()
+  const { data, error } = await supabase.from('resumes').select('*').eq('user_id', userId).single()
 
   if (error && error.code !== 'PGRST116') {
     console.error('Error fetching resume:', error)
@@ -51,4 +47,4 @@ export async function getServerUserPortfolio(userId: string): Promise<PortfolioR
   }
 
   return data
-} 
+}

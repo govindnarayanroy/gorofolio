@@ -1,9 +1,11 @@
 # Vercel Deploy Hook Setup Guide
 
 ## Current Issue
+
 Portfolio publishing with Vercel is not working. The system needs to be configured to use Vercel Deploy Hooks for reliable portfolio deployment.
 
 ## What are Vercel Deploy Hooks?
+
 Deploy hooks are webhook URLs that trigger deployments when called. They're simpler and more reliable than using the Vercel API directly.
 
 ## Setup Instructions
@@ -74,6 +76,7 @@ your-vercel-project/
 ### 7. Expected Log Output
 
 When working correctly, you should see:
+
 ```
 🚀 Portfolio deploy API called
 📋 Deploy request: { profileId: '123', customSlug: null, userId: 'user-id' }
@@ -86,20 +89,25 @@ When working correctly, you should see:
 ### 8. Troubleshooting
 
 **Issue**: "No Vercel deploy hook found"
+
 - **Solution**: Add `VERCEL_DEPLOY_HOOK` to your `.env.local` file
 
 **Issue**: "Deploy hook failed: 404"
+
 - **Solution**: Verify the deploy hook URL is correct and the Vercel project exists
 
 **Issue**: "Deploy hook failed: 401/403"
+
 - **Solution**: Regenerate the deploy hook in Vercel dashboard
 
 **Issue**: Portfolio URL not accessible
+
 - **Solution**: Check that your Vercel project is configured to handle the portfolio routes
 
 ### 9. Production Considerations
 
 For production deployment:
+
 1. Add the environment variables to your Vercel project settings
 2. Ensure your main application and portfolio generation are in the same Vercel project
 3. Consider using custom domains for portfolio URLs
@@ -108,6 +116,7 @@ For production deployment:
 ### 10. Alternative: Separate Portfolio Project
 
 If you want portfolios on a separate domain:
+
 1. Create a dedicated Vercel project for portfolios
 2. Set up the deploy hook for that project
 3. Configure the `VERCEL_PROJECT_URL` to point to the portfolio domain
@@ -124,7 +133,8 @@ If you want portfolios on a separate domain:
 ## Support
 
 If you encounter issues:
+
 1. Check the terminal logs for detailed error messages
 2. Verify your Vercel project settings
 3. Test the deploy hook URL manually with a tool like Postman
-4. Ensure your `.env.local` file is properly formatted 
+4. Ensure your `.env.local` file is properly formatted

@@ -3,6 +3,7 @@
 ## Required API Keys
 
 ### 1. Groq API Key (for Speech-to-Text)
+
 - Go to [Groq Console](https://console.groq.com/)
 - Sign up or log in
 - Navigate to API Keys section
@@ -10,6 +11,7 @@
 - Copy the key (starts with `gsk_...`)
 
 ### 2. OpenAI API Key (for LLM Scoring)
+
 - Go to [OpenAI Platform](https://platform.openai.com/)
 - Sign up or log in
 - Navigate to API Keys section
@@ -36,6 +38,7 @@ NODE_ENV=development
 ## Browser Requirements
 
 ### Microphone Permissions
+
 - The app requires microphone access for audio recording
 - When prompted, click "Allow" to grant microphone permissions
 - If you accidentally denied permissions:
@@ -44,6 +47,7 @@ NODE_ENV=development
   3. Refresh the page
 
 ### Supported Browsers
+
 - Chrome (recommended)
 - Firefox
 - Safari
@@ -52,6 +56,7 @@ NODE_ENV=development
 ## Testing Audio Recording
 
 ### Verification Steps
+
 1. Start the development server: `pnpm dev`
 2. Navigate to `/dashboard/interview/session?domain=backend`
 3. Click the microphone button
@@ -65,6 +70,7 @@ NODE_ENV=development
 ### Troubleshooting
 
 #### Issue: All audio files are exactly 226,104 bytes
+
 - **Problem**: MediaRecorder generating dummy data instead of real audio
 - **Solutions**:
   1. Check microphone permissions
@@ -73,6 +79,7 @@ NODE_ENV=development
   4. Restart the browser
 
 #### Issue: Mock transcriptions instead of real speech-to-text
+
 - **Problem**: Missing or invalid GROQ_API_KEY
 - **Solutions**:
   1. Verify your Groq API key is correct in `.env.local`
@@ -80,6 +87,7 @@ NODE_ENV=development
   3. Restart the development server after adding the key
 
 #### Issue: Empty or silent recordings
+
 - **Problem**: Microphone not capturing audio
 - **Solutions**:
   1. Check microphone hardware connection
@@ -106,15 +114,17 @@ pnpm dev
 
 When everything is working correctly:
 
-1. **Audio Recording**: 
+1. **Audio Recording**:
+
    - Audio level indicator shows green bars when speaking
    - Different recording durations produce different file sizes
    - Console shows MediaRecorder capturing real audio chunks
 
 2. **Speech-to-Text**:
+
    - Your actual spoken words appear in the transcript
    - Console shows "✅ Groq transcription successful"
    - No "fallback" or "mock" indicators in logs
 
 3. **Interview Flow**:
-   - Record answer → See real transcript → Get AI-powered score → Continue to next question 
+   - Record answer → See real transcript → Get AI-powered score → Continue to next question
