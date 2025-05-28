@@ -227,7 +227,15 @@ function InterviewResultsContent() {
                 <h2 className="mb-2 text-2xl font-bold">Results Not Found</h2>
                 <p className="mb-6 text-blue-200">{error || 'Could not load interview results'}</p>
                 <Button
-                  onClick={() => router.push('/dashboard')}
+                  onClick={() => {
+                    try {
+                      router.push('/dashboard')
+                    } catch (error) {
+                      console.error('Navigation error:', error)
+                      // Fallback for production issues
+                      window.location.href = '/dashboard'
+                    }
+                  }}
                   className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                 >
                   Back to Dashboard
@@ -471,7 +479,15 @@ function InterviewResultsContent() {
         {/* Action Buttons */}
         <div className="mx-auto mt-8 flex max-w-4xl justify-center space-x-4">
           <Button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => {
+              try {
+                router.push('/dashboard')
+              } catch (error) {
+                console.error('Navigation error:', error)
+                // Fallback for production issues
+                window.location.href = '/dashboard'
+              }
+            }}
             variant="outline"
             className="border-white/40 bg-white/10 px-6 py-2 text-white backdrop-blur-sm hover:border-white/60 hover:bg-white/20"
           >

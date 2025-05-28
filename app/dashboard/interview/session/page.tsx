@@ -498,7 +498,15 @@ Please provide a score from 1-10 and 2-3 actionable tips for improvement.`
 
                 <div className="flex space-x-4">
                   <Button
-                    onClick={() => router.push('/dashboard')}
+                    onClick={() => {
+                      try {
+                        router.push('/dashboard')
+                      } catch (error) {
+                        console.error('Navigation error:', error)
+                        // Fallback for production issues
+                        window.location.href = '/dashboard'
+                      }
+                    }}
                     variant="outline"
                     className="flex-1 border-white/20 bg-white text-black hover:bg-gray-100"
                   >
