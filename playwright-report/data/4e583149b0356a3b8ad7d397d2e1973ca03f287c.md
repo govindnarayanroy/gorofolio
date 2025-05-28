@@ -1,16 +1,16 @@
 # Test info
 
-- Name: Cover Letter Generator >> generates a cover letter from job description
-- Location: /Users/govindroy/Documents/gorofolio/tests/cover-letter.spec.ts:4:7
+- Name: Cover Letter Generator >> shows error for empty job description
+- Location: /Users/govindroy/Documents/gorofolio/tests/cover-letter.spec.ts:44:7
 
 # Error details
 
 ```
-Error: page.fill: Test timeout of 30000ms exceeded.
+Error: page.click: Test timeout of 30000ms exceeded.
 Call log:
-  - waiting for locator('textarea#jd')
+  - waiting for locator('button:has-text("Generate Cover Letter")')
 
-    at /Users/govindroy/Documents/gorofolio/tests/cover-letter.spec.ts:18:16
+    at /Users/govindroy/Documents/gorofolio/tests/cover-letter.spec.ts:48:16
 ```
 
 # Page snapshot
@@ -51,8 +51,7 @@ Call log:
   15 |       - Experience with Next.js
   16 |       - Knowledge of modern web technologies
   17 |     `;
-> 18 |     await page.fill('textarea#jd', jobDescription);
-     |                ^ Error: page.fill: Test timeout of 30000ms exceeded.
+  18 |     await page.fill('textarea#jd', jobDescription);
   19 |
   20 |     // Select a tone
   21 |     await page.selectOption('select#tone', 'professional');
@@ -82,7 +81,8 @@ Call log:
   45 |     await page.goto('/dashboard/cover');
   46 |     
   47 |     // Try to generate without entering job description
-  48 |     await page.click('button:has-text("Generate Cover Letter")');
+> 48 |     await page.click('button:has-text("Generate Cover Letter")');
+     |                ^ Error: page.click: Test timeout of 30000ms exceeded.
   49 |     
   50 |     // Verify error message
   51 |     const error = await page.textContent('p.text-red-600');

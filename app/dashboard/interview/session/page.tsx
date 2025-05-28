@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from 'react'
 import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { BackToDashboard } from '@/components/BackToDashboard'
@@ -44,7 +45,7 @@ interface InterviewState {
   startTime: Date | null
 }
 
-export default function InterviewSession() {
+function InterviewSessionContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const domain = searchParams.get('domain') || 'backend'
@@ -677,5 +678,22 @@ Please provide a score from 1-10 and 2-3 actionable tips for improvement.`
         </div>
       </div>
     </div>
+  )
+}
+
+export default function InterviewSession() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center text-white">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p>Loading interview session...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <InterviewSessionContent />
+    </Suspense>
   )
 } 

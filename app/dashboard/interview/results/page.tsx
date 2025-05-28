@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { BackToDashboard } from '@/components/BackToDashboard'
 import { Button } from '@/components/ui/button'
@@ -67,7 +68,7 @@ interface InterviewSessionWithDetails {
   answers: InterviewAnswer[]
 }
 
-export default function InterviewResults() {
+function InterviewResultsContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const sessionId = searchParams.get('session')
@@ -76,17 +77,7 @@ export default function InterviewResults() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!sessionId) {
-      setError('No session ID provided')
-      setIsLoading(false)
-      return
-    }
-
-    loadSessionResults()
-  }, [sessionId])
-
-  const loadSessionResults = async () => {
+  const loadSessionResults = useCallback(async () => {
     try {
       setIsLoading(true)
       
@@ -132,7 +123,17 @@ export default function InterviewResults() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [sessionId])
+
+  useEffect(() => {
+    if (!sessionId) {
+      setError('No session ID provided')
+      setIsLoading(false)
+      return
+    }
+
+    loadSessionResults()
+  }, [sessionId, loadSessionResults])
 
   const calculateAverageScore = (answers: InterviewAnswer[]): number => {
     const scoredAnswers = answers.filter(answer => answer.score !== null && answer.score !== undefined)
@@ -199,16 +200,13 @@ export default function InterviewResults() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
-        <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white p-8">
-          <div className="flex items-center space-x-4">
-            <RefreshCw className="w-8 h-8 animate-spin text-blue-400" />
-            <div>
-              <h3 className="text-lg font-semibold">Loading Results...</h3>
-              <p className="text-blue-200">Analyzing your interview performance</p>
-            </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center text-white">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p>Loading interview results...</p>
           </div>
-        </Card>
+        </div>
       </div>
     )
   }
@@ -478,5 +476,22 @@ export default function InterviewResults() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function InterviewResults() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center text-white">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p>Loading interview results...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <InterviewResultsContent />
+    </Suspense>
   )
 } 

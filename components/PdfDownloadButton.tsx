@@ -11,7 +11,7 @@ export function PdfDownloadButton({
   children: React.ReactNode;
 }) {
   const handlePrint = useReactToPrint({
-    content: () => targetRef.current,
+    contentRef: targetRef,
   });
 
   return (

@@ -21,7 +21,7 @@
 | User Flow Integration   |    ✅   | agent | 2025‑01‑26   |
 | Logic Polish Sprint     |    ✅   | agent | 2025‑01‑27   |
 | Portfolio PDF Export    |    ✅   | agent | 2025‑01‑27   |
-| CI/CD & tests           |    🔄   | agent | 2025‑01‑27   |
+| CI/CD & tests           |    ✅   | agent | 2025‑01‑27   |
 
 *(Tick ✅, update the date, and commit whenever a task finishes.)*
 
@@ -529,7 +529,7 @@ VERCEL_PROJECT_URL=your-project.vercel.app
 
 ---
 
-# 10 · CI/CD & Testing 🔄 IN PROGRESS
+# 10 · CI/CD & Testing ✅ COMPLETED
 
 **Status:** Next priority module for production readiness
 

@@ -1,7 +1,7 @@
 # Test info
 
-- Name: Cover Letter Generator >> generates a cover letter from job description
-- Location: /Users/govindroy/Documents/gorofolio/tests/cover-letter.spec.ts:4:7
+- Name: Cover Letter Generator >> handles API errors gracefully
+- Location: /Users/govindroy/Documents/gorofolio/tests/cover-letter.spec.ts:55:7
 
 # Error details
 
@@ -10,7 +10,7 @@ Error: page.fill: Test timeout of 30000ms exceeded.
 Call log:
   - waiting for locator('textarea#jd')
 
-    at /Users/govindroy/Documents/gorofolio/tests/cover-letter.spec.ts:18:16
+    at /Users/govindroy/Documents/gorofolio/tests/cover-letter.spec.ts:67:16
 ```
 
 # Page snapshot
@@ -51,8 +51,7 @@ Call log:
   15 |       - Experience with Next.js
   16 |       - Knowledge of modern web technologies
   17 |     `;
-> 18 |     await page.fill('textarea#jd', jobDescription);
-     |                ^ Error: page.fill: Test timeout of 30000ms exceeded.
+  18 |     await page.fill('textarea#jd', jobDescription);
   19 |
   20 |     // Select a tone
   21 |     await page.selectOption('select#tone', 'professional');
@@ -101,7 +100,8 @@ Call log:
   64 |     });
   65 |
   66 |     // Fill in job description and try to generate
-  67 |     await page.fill('textarea#jd', 'Test job description');
+> 67 |     await page.fill('textarea#jd', 'Test job description');
+     |                ^ Error: page.fill: Test timeout of 30000ms exceeded.
   68 |     await page.click('button:has-text("Generate Cover Letter")');
   69 |     
   70 |     // Verify error message
