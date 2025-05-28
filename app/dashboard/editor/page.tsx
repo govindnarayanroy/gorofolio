@@ -25,7 +25,6 @@ import { getUserResume, saveResume } from '@/lib/database'
 import { toast } from 'sonner'
 import { BackToDashboard } from '@/components/BackToDashboard'
 import { ImageUpload } from '@/components/ImageUpload'
-import { ResumeDownload } from '@/components/ResumeDownload'
 
 export default function EditorPage() {
   const router = useRouter()
@@ -655,9 +654,6 @@ export default function EditorPage() {
               />
             </CardContent>
           </Card>
-
-          {/* Resume Download */}
-          <ResumeDownload profile={profile} />
 
           {/* Action Buttons */}
           <div className="flex items-center justify-between pt-8">

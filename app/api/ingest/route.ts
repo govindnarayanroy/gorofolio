@@ -36,8 +36,12 @@ Return **ONLY** this JSON:
       "role": "",
       "startDate": "",
       "endDate": "",
-      "description": "",
-      "achievements": []
+      "bullets": [
+        "Specific achievement or responsibility 1",
+        "Specific achievement or responsibility 2", 
+        "Specific achievement or responsibility 3",
+        "Specific achievement or responsibility 4"
+      ]
     }
   ],
   "education": [
@@ -51,10 +55,9 @@ Return **ONLY** this JSON:
     }
   ],
   "skills": [
-    {
-      "name": "",
-      "level": "Beginner|Intermediate|Advanced|Expert"
-    }
+    "Skill 1",
+    "Skill 2", 
+    "Skill 3"
   ],
   "projects": [
     {
@@ -91,12 +94,24 @@ Return **ONLY** this JSON:
 }
 \`\`\`
 
-## Rules
+## Critical Rules for Experience Bullets
+- NEVER combine multiple achievements into one bullet point
+- Each bullet should be ONE specific achievement, responsibility, or accomplishment
+- If a role has multiple achievements, create separate bullets for each one
+- Break down long descriptions into multiple focused bullets
+- Each bullet should be 1-2 sentences maximum
+- Focus on quantifiable results and specific actions taken
+- Use action verbs to start each bullet point
+
+## General Rules
 - Extract ALL information from the résumé
-- Use exact text from the résumé
-- If information is missing, use empty string ""
+- Use exact text from the résumé when possible
+- Create a compelling 2-3 sentence summary highlighting key achievements and expertise
+- For experiences, aim for 3-6 bullets per role depending on content available
+- If information is missing, use empty string "" or empty array []
 - For arrays, include all relevant items
 - Dates should be in "YYYY-MM" or "YYYY" format
+- Skills should be simple strings, not objects
 - Return ONLY the JSON, no other text`
 
 async function extractTextFromPDF(buffer: Buffer): Promise<string> {
@@ -323,16 +338,14 @@ export async function POST(request: Request) {
         role: exp.role || '',
         start: exp.startDate || '',
         end: exp.endDate === 'PRESENT' ? undefined : exp.endDate || '',
-        bullets: exp.description ? [exp.description] : exp.achievements || []
+        bullets: exp.bullets || []
       })),
       education: (llmProfile.education || []).map((edu: any) => ({
         school: edu.institution || '',
         degree: edu.degree || '',
         year: edu.endDate || edu.startDate || ''
       })),
-      skills: (llmProfile.skills || []).map((skill: any) => 
-        typeof skill === 'string' ? skill : skill.name || ''
-      ),
+      skills: (llmProfile.skills || []).filter((skill: string) => skill && skill.trim()),
       links: []
     }
 
