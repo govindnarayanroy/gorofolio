@@ -38,7 +38,13 @@ export default function DashboardClient({ user }: DashboardClientProps) {
             <div className="flex items-center justify-between">
               <Link href="/" className="flex items-center space-x-3">
                 <div className="relative h-10 w-10">
-                  <Image src="/images/logo.png" alt="GoRoFolio" fill className="object-contain" />
+                  <Image 
+                    src="/images/logo.png" 
+                    alt="GoRoFolio" 
+                    fill 
+                    sizes="40px"
+                    className="object-contain" 
+                  />
                 </div>
                 <span className="text-2xl font-bold text-white">GoRoFolio</span>
               </Link>

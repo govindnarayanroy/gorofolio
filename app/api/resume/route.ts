@@ -26,6 +26,15 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch resume' }, { status: 500 })
     }
 
+    // If we have data, merge the image_url into the profile data
+    if (data && data.data) {
+      const profileWithImage = {
+        ...data.data,
+        image_url: data.image_url
+      }
+      return NextResponse.json({ data: { ...data, data: profileWithImage } })
+    }
+
     return NextResponse.json({ data })
   } catch (error) {
     console.error('Resume GET error:', error)

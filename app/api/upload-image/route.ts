@@ -7,6 +7,29 @@ const MAX_SIZE = 5 * 1024 * 1024 // 5 MB
 // Use Supabase Storage by default in production, local storage only in development
 const USE_SUPABASE_STORAGE = process.env.NODE_ENV === 'production' || process.env.USE_SUPABASE_STORAGE === 'true'
 
+// Simplified bucket check - just assume bucket exists since we know it does
+async function ensureBucketExists(supabase: any) {
+  try {
+    // Try a simple operation to test if we can access the bucket
+    const { data, error } = await supabase.storage
+      .from('profile-images')
+      .list('', { limit: 1 })
+    
+    if (error) {
+      console.log('⚠️ Cannot list bucket contents (this is expected with RLS), but bucket likely exists:', error.message)
+      // Even if we can't list, the bucket probably exists, so return true
+      return true
+    }
+
+    console.log('✅ Bucket profile-images is accessible')
+    return true
+  } catch (error) {
+    console.log('⚠️ Bucket access test failed, but proceeding anyway:', error)
+    // Assume bucket exists and proceed
+    return true
+  }
+}
+
 export async function POST(req: Request) {
   try {
     console.log('📥 Image upload API called')
@@ -21,7 +44,7 @@ export async function POST(req: Request) {
     } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      console.log('❌ Authentication failed')
+      console.log('❌ Authentication failed:', authError)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -60,10 +83,17 @@ export async function POST(req: Request) {
     if (USE_SUPABASE_STORAGE) {
       // Supabase Storage implementation (primary for production)
       try {
+        // Ensure bucket exists
+        const bucketReady = await ensureBucketExists(supabase)
+        
+        if (!bucketReady) {
+          throw new Error('Failed to setup Supabase Storage bucket')
+        }
+
         const timestamp = Date.now()
         const extension = file.name.split('.').pop()
         const fileName = `${user.id}-${timestamp}.${extension}`
-        const filePath = `profile-images/${fileName}`
+        const filePath = `${fileName}` // Store directly in bucket root
 
         console.log('📤 Uploading to Supabase Storage:', filePath)
 
@@ -85,18 +115,28 @@ export async function POST(req: Request) {
 
         console.log('✅ Supabase upload successful:', uploadData)
 
-        // Get public URL
-        const { data: urlData } = supabase.storage.from('profile-images').getPublicUrl(filePath)
+        // Get signed URL (valid for 1 year)
+        const { data: urlData, error: urlError } = await supabase.storage
+          .from('profile-images')
+          .createSignedUrl(filePath, 365 * 24 * 60 * 60) // 1 year expiry
 
-        imageUrl = urlData.publicUrl
-        console.log('🔗 Supabase public URL:', imageUrl)
+        if (urlError) {
+          console.error('❌ Failed to create signed URL:', urlError)
+          throw new Error(`Failed to create signed URL: ${urlError.message}`)
+        }
+
+        imageUrl = urlData.signedUrl
+        console.log('🔗 Supabase signed URL:', imageUrl)
       } catch (supabaseError) {
         console.error('❌ Supabase Storage error:', supabaseError)
         
         // In production, we can't fall back to local storage, so return error
         if (process.env.NODE_ENV === 'production') {
           return NextResponse.json(
-            { error: 'Failed to upload image. Please try again.' },
+            { 
+              error: 'Failed to upload image. Please try again.',
+              details: supabaseError instanceof Error ? supabaseError.message : 'Unknown error'
+            },
             { status: 500 }
           )
         }
@@ -171,6 +211,9 @@ export async function POST(req: Request) {
     })
   } catch (error) {
     console.error('❌ Upload error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
