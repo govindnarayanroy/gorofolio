@@ -133,10 +133,12 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholde
 The 3 vulnerabilities found are in Lighthouse CI dependencies, not core application code:
 
 1. **ws@8.16.0** (HIGH): DoS vulnerability in WebSocket library
+
    - Path: `@lhci/cli > lighthouse > puppeteer-core > ws`
    - Impact: Development/testing tool only, not production runtime
 
 2. **tar-fs@3.0.4** (HIGH): Path traversal vulnerability
+
    - Path: `@lhci/cli > lighthouse > puppeteer-core > @puppeteer/browsers > tar-fs`
    - Impact: Development/testing tool only, not production runtime
 
