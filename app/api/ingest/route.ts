@@ -17,6 +17,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type',
 }
 
+// Production deployment with GROQ_API_KEY configured
 export async function OPTIONS() {
   return new Response(null, {
     status: 200,
