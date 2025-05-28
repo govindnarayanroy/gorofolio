@@ -25,6 +25,7 @@ export default function PreviewPage() {
   const [error, setError] = useState<string | null>(null)
   const [showOptimizer, setShowOptimizer] = useState(false)
   const resumeRef = useRef<HTMLElement>(null)
+  const optimizerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     async function loadProfile() {
@@ -58,6 +59,24 @@ export default function PreviewPage() {
     setTimeout(() => {
       window.print()
     }, 100)
+  }
+
+  // Handle optimizer toggle with auto-scroll for mobile
+  const handleOptimizerToggle = () => {
+    const newShowOptimizer = !showOptimizer
+    setShowOptimizer(newShowOptimizer)
+    
+    // Auto-scroll to optimizer in mobile view (when it becomes visible)
+    if (newShowOptimizer && optimizerRef.current) {
+      // Small delay to ensure the element is rendered
+      setTimeout(() => {
+        optimizerRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start',
+          inline: 'nearest'
+        })
+      }, 100)
+    }
   }
 
   if (isLoading) {
@@ -117,7 +136,7 @@ export default function PreviewPage() {
 
         {profile.name !== defaultProfile.name && (
           <Button
-            onClick={() => setShowOptimizer(!showOptimizer)}
+            onClick={handleOptimizerToggle}
             variant={showOptimizer ? 'default' : 'outline'}
             className={showOptimizer ? 'bg-purple-600 hover:bg-purple-700' : ''}
           >
@@ -145,12 +164,16 @@ export default function PreviewPage() {
 
         {/* Resume Optimizer */}
         {showOptimizer && profile.name !== defaultProfile.name && (
-          <div className="space-y-4 xl:w-96 xl:flex-shrink-0 print:hidden">
+          <div 
+            ref={optimizerRef}
+            className="space-y-4 xl:w-96 xl:flex-shrink-0 print:hidden"
+          >
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Target className="h-4 w-4" />
               Resume Optimization
             </div>
-            <div className="sticky top-6">
+            {/* Fixed: Add independent scroll container for web view */}
+            <div className="xl:sticky xl:top-6 xl:max-h-[calc(100vh-8rem)] xl:overflow-y-auto xl:pr-2">
               <ResumeOptimizer profile={profile} />
             </div>
           </div>
