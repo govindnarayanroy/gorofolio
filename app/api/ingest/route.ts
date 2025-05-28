@@ -10,6 +10,20 @@ import { createClient } from '@/lib/supabase-server'
 
 const MAX_SIZE = 4 * 1024 * 1024 // 4 MB
 
+// Add CORS headers for production
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+}
+
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 200,
+    headers: corsHeaders,
+  })
+}
+
 export async function POST(req: Request) {
   try {
     console.log('📥 Ingest API called')
@@ -22,11 +36,24 @@ export async function POST(req: Request) {
     } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      console.log('❌ Authentication failed')
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      console.log('❌ Authentication failed:', authError)
+      return NextResponse.json(
+        { error: 'Unauthorized', details: authError?.message },
+        { status: 401, headers: corsHeaders }
+      )
     }
 
-    const form = await req.formData()
+    let form: FormData
+    try {
+      form = await req.formData()
+    } catch (formError) {
+      console.error('❌ FormData parsing failed:', formError)
+      return NextResponse.json(
+        { error: 'Invalid form data', details: formError instanceof Error ? formError.message : 'Unknown error' },
+        { status: 400, headers: corsHeaders }
+      )
+    }
+
     const file = form.get('file') as File
 
     console.log(
@@ -46,35 +73,133 @@ export async function POST(req: Request) {
       lastModified: file?.lastModified,
     })
 
-    if (!file || file.size > MAX_SIZE) {
-      console.log('❌ File validation failed')
-      return NextResponse.json({ error: 'Missing or too‑large file' }, { status: 400 })
+    if (!file) {
+      console.log('❌ No file provided')
+      return NextResponse.json(
+        { error: 'No file provided' },
+        { status: 400, headers: corsHeaders }
+      )
+    }
+
+    if (file.size > MAX_SIZE) {
+      console.log('❌ File too large:', file.size)
+      return NextResponse.json(
+        { error: `File too large. Maximum size is ${MAX_SIZE / 1024 / 1024}MB` },
+        { status: 400, headers: corsHeaders }
+      )
+    }
+
+    if (file.type !== 'application/pdf') {
+      console.log('❌ Invalid file type:', file.type)
+      return NextResponse.json(
+        { error: 'Only PDF files are supported' },
+        { status: 400, headers: corsHeaders }
+      )
     }
 
     console.log('✅ File validation passed')
     console.log('📄 Extracting text from PDF...')
 
-    const buffer = Buffer.from(await file.arrayBuffer())
-    console.log('📦 Buffer size:', buffer.length)
+    let buffer: Buffer
+    try {
+      buffer = Buffer.from(await file.arrayBuffer())
+      console.log('📦 Buffer size:', buffer.length)
+    } catch (bufferError) {
+      console.error('❌ Buffer creation failed:', bufferError)
+      return NextResponse.json(
+        { error: 'Failed to process file' },
+        { status: 500, headers: corsHeaders }
+      )
+    }
 
-    const { text } = await pdf(buffer)
+    let text: string
+    try {
+      const result = await pdf(buffer)
+      text = result.text
+      console.log('📝 Extracted text length:', text.length)
+      console.log('📝 Text preview:', text.slice(0, 200) + '...')
+    } catch (pdfError) {
+      console.error('❌ PDF parsing failed:', pdfError)
+      return NextResponse.json(
+        { error: 'Failed to extract text from PDF. Please ensure the PDF is not corrupted or password-protected.' },
+        { status: 400, headers: corsHeaders }
+      )
+    }
 
-    console.log('📝 Extracted text length:', text.length)
-    console.log('📝 Text preview:', text.slice(0, 200) + '...')
+    if (!text || text.trim().length < 50) {
+      console.log('❌ Insufficient text extracted')
+      return NextResponse.json(
+        { error: 'Could not extract sufficient text from PDF. Please ensure the PDF contains readable text.' },
+        { status: 400, headers: corsHeaders }
+      )
+    }
 
     console.log('🤖 Building LLM prompt...')
-    const tpl = await fs.readFile(path.join(process.cwd(), 'prompts/parse-resume.md'), 'utf8')
-    const prompt = tpl.replace('{{resume_text}}', text.slice(0, 60000))
-    console.log('📝 Prompt length:', prompt.length)
+    let prompt: string
+    try {
+      const tpl = await fs.readFile(path.join(process.cwd(), 'prompts/parse-resume.md'), 'utf8')
+      prompt = tpl.replace('{{resume_text}}', text.slice(0, 60000))
+      console.log('📝 Prompt length:', prompt.length)
+    } catch (promptError) {
+      console.error('❌ Prompt template loading failed:', promptError)
+      // Fallback prompt if file is missing
+      console.log('⚠️ Using fallback prompt...')
+      prompt = `## System
+
+You are an AI that converts raw résumé text into valid JSON matching the Profile schema.
+
+## Instructions
+
+SRC:
+
+\`\`\`
+${text.slice(0, 60000)}
+\`\`\`
+
+Return **ONLY** this JSON:
+
+\`\`\`json
+{
+  "name": "",
+  "headline": "",
+  "summary": "",
+  "experiences": [
+    {
+      "company": "",
+      "role": "",
+      "start": "YYYY-MM",
+      "end": "YYYY-MM or null",
+      "bullets": []
+    }
+  ],
+  "education": [{ "school": "", "degree": "", "year": "" }],
+  "skills": [],
+  "links": []
+}
+\`\`\`
+
+_Do not wrap in Markdown fences; no additional keys._
+**Output strictly:** raw minified JSON only — **NO Markdown fences, NO extra text**.`
+      console.log('📝 Fallback prompt length:', prompt.length)
+    }
 
     console.log('🧠 Calling LLM for parsing...')
-    const res = await chatLLM('groq', 'llama3-8b-8192', [
-      { role: 'system', content: 'You are a helpful assistant.' },
-      { role: 'user', content: prompt },
-    ])
+    let res: any
+    try {
+      res = await chatLLM('groq', 'llama3-8b-8192', [
+        { role: 'system', content: 'You are a helpful assistant.' },
+        { role: 'user', content: prompt },
+      ])
 
-    console.log('🤖 LLM response length:', res.content?.length)
-    console.log('🤖 LLM response preview:', res.content?.slice(0, 200) + '...')
+      console.log('🤖 LLM response length:', res.content?.length)
+      console.log('🤖 LLM response preview:', res.content?.slice(0, 200) + '...')
+    } catch (llmError) {
+      console.error('❌ LLM call failed:', llmError)
+      return NextResponse.json(
+        { error: 'AI processing failed. Please try again.' },
+        { status: 500, headers: corsHeaders }
+      )
+    }
 
     let profile: Profile
     try {
@@ -105,7 +230,10 @@ export async function POST(req: Request) {
       })
     } catch (parseError) {
       console.error('❌ JSON parsing failed:', parseError)
-      throw new Error('LLM did not return valid JSON')
+      return NextResponse.json(
+        { error: 'Failed to parse resume content. Please try with a different PDF.' },
+        { status: 500, headers: corsHeaders }
+      )
     }
 
     // Save the parsed profile to the database
@@ -161,9 +289,15 @@ export async function POST(req: Request) {
     }
 
     console.log('🎉 Ingestion successful!')
-    return NextResponse.json({ profile })
+    return NextResponse.json({ profile }, { headers: corsHeaders })
   } catch (err) {
-    console.error('Ingestion error:', err)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    console.error('❌ Ingestion error:', err)
+    return NextResponse.json(
+      { 
+        error: 'Internal server error',
+        details: err instanceof Error ? err.message : 'Unknown error'
+      },
+      { status: 500, headers: corsHeaders }
+    )
   }
 }
