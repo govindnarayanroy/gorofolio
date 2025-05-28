@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Plus, X, Save, ArrowRight, Loader2, User, Briefcase, GraduationCap, Code, Link as LinkIcon } from 'lucide-react'
+import { Plus, X, Save, ArrowRight, Loader2, User, Briefcase, GraduationCap, Code, Link as LinkIcon, ArrowUpDown } from 'lucide-react'
 import { Profile, Experience, Education } from '@/lib/types'
 import { getUserResume, saveResume } from '@/lib/database'
 import { toast } from 'sonner'
@@ -77,17 +77,63 @@ export default function EditorPage() {
   }
 
   const addExperience = () => {
+    const newExperience = {
+      company: '',
+      role: '',
+      start: '',
+      end: '',
+      bullets: []
+    };
+    
     setProfile(prev => ({
       ...prev,
-      experiences: [...prev.experiences, {
-        company: '',
-        role: '',
-        start: '',
-        end: '',
-        bullets: []
-      }]
-    }))
-  }
+      experiences: [...prev.experiences, newExperience]
+    }));
+    
+    // Show success toast
+    toast.success('New experience added! Fill in the details below.');
+    
+    // Scroll to the newly added experience after a short delay to ensure DOM update
+    setTimeout(() => {
+      const experienceElements = document.querySelectorAll('[data-experience-index]');
+      const lastExperienceElement = experienceElements[experienceElements.length - 1];
+      if (lastExperienceElement) {
+        lastExperienceElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+        // Add a subtle highlight effect
+        lastExperienceElement.classList.add('ring-2', 'ring-blue-400', 'ring-opacity-50');
+        setTimeout(() => {
+          lastExperienceElement.classList.remove('ring-2', 'ring-blue-400', 'ring-opacity-50');
+        }, 2000);
+      }
+    }, 100);
+  };
+
+  // Function to sort experiences chronologically (most recent first)
+  const sortExperiencesChronologically = (silent = false) => {
+    setProfile(prev => ({
+      ...prev,
+      experiences: [...prev.experiences].sort((a, b) => {
+        // Handle empty dates - put them at the top (most recent)
+        if (!a.start && !b.start) return 0;
+        if (!a.start) return -1;
+        if (!b.start) return 1;
+        
+        // Convert dates to comparable format (YYYY-MM)
+        const dateA = a.start.replace('-', '');
+        const dateB = b.start.replace('-', '');
+        
+        // Sort in descending order (most recent first)
+        return dateB.localeCompare(dateA);
+      })
+    }));
+    
+    if (!silent) {
+      toast.success('Experiences sorted chronologically!');
+    }
+  };
 
   const updateExperience = (index: number, field: keyof Experience, value: string | string[]) => {
     setProfile(prev => ({
@@ -95,8 +141,15 @@ export default function EditorPage() {
       experiences: prev.experiences.map((exp, i) => 
         i === index ? { ...exp, [field]: value } : exp
       )
-    }))
-  }
+    }));
+    
+    // Auto-sort when start date is updated and there are multiple experiences
+    if (field === 'start' && value && profile.experiences.length > 1) {
+      setTimeout(() => {
+        sortExperiencesChronologically(true); // Pass true for silent sort
+      }, 500); // Small delay to allow user to finish typing
+    }
+  };
 
   const removeExperience = (index: number) => {
     setProfile(prev => ({
@@ -235,11 +288,13 @@ export default function EditorPage() {
       <div className="absolute -z-10 h-96 w-96 rounded-full bg-purple-600/20 blur-3xl right-1/4 top-1/2" />
       
       <div className="container mx-auto px-6 py-12">
+        {/* Back to Dashboard Button - Top Left */}
+        <div className="mb-8">
+          <BackToDashboard variant="button" className="inline-flex" />
+        </div>
+
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="flex justify-center mb-6">
-            <BackToDashboard variant="header" />
-          </div>
           <h1 className="text-4xl font-extrabold text-white mb-4">
             Edit Your <span className="text-sky-400">Resume</span>
           </h1>
@@ -340,15 +395,33 @@ export default function EditorPage() {
                   <Briefcase className="h-5 w-5" />
                   Work Experience
                 </div>
-                <Button onClick={addExperience} variant="outline" size="sm" className="border-blue-200 text-blue-600 hover:bg-blue-50">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Experience
-                </Button>
+                <div className="flex gap-2">
+                  {profile.experiences.length > 1 && (
+                    <Button 
+                      onClick={() => sortExperiencesChronologically(false)} 
+                      variant="outline" 
+                      size="sm" 
+                      className="border-green-200 text-green-600 hover:bg-green-50"
+                      title="Sort experiences by date (most recent first)"
+                    >
+                      <ArrowUpDown className="h-4 w-4 mr-2" />
+                      Sort by Date
+                    </Button>
+                  )}
+                  <Button onClick={addExperience} variant="outline" size="sm" className="border-blue-200 text-blue-600 hover:bg-blue-50">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Experience
+                  </Button>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               {profile.experiences.map((exp, index) => (
-                <div key={index} className="border border-slate-200 rounded-lg p-4 space-y-4">
+                <div 
+                  key={index} 
+                  data-experience-index={index}
+                  className="border border-slate-200 rounded-lg p-4 space-y-4 transition-all duration-300"
+                >
                   <div className="flex justify-between items-start">
                     <h4 className="font-medium text-slate-800">Experience {index + 1}</h4>
                     <Button 

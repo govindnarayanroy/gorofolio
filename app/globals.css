@@ -328,3 +328,54 @@ html {
     animation-delay: 0.6s;
   }
 }
+
+/* Hide Next.js Dev Tools button during development (optional) */
+button[aria-label*="Next.js"] {
+  display: none !important;
+}
+
+/* Alternative selector for Next.js dev tools */
+[data-nextjs-dev-tools] {
+  display: none !important;
+}
+
+/* Hide empty Sonner toast container */
+[data-sonner-toaster]:empty {
+  display: none !important;
+}
+
+/* Hide Sonner toast container when no toasts are visible */
+[data-sonner-toaster]:not(:has([data-sonner-toast])) {
+  display: none !important;
+}
+
+/* Alternative approach - hide when container has no visible children */
+[data-sonner-toaster] {
+  min-height: 0 !important;
+}
+
+[data-sonner-toaster]:empty,
+[data-sonner-toaster]:not(:has([data-visible="true"])) {
+  display: none !important;
+}
+
+/* More specific Sonner selectors */
+.sonner-toaster:empty {
+  display: none !important;
+}
+
+/* Hide any alert elements that might be empty toast containers */
+alert:empty {
+  display: none !important;
+}
+
+/* Hide elements with role="alert" when empty */
+[role="alert"]:empty {
+  display: none !important;
+}
+
+/* Hide toast containers with specific classes */
+.toast-container:empty,
+.toaster:empty {
+  display: none !important;
+}
