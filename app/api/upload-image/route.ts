@@ -4,12 +4,14 @@ import { writeFile, mkdir } from 'fs/promises'
 import path from 'path'
 
 const MAX_SIZE = 5 * 1024 * 1024 // 5 MB
-const USE_SUPABASE_STORAGE = process.env.USE_SUPABASE_STORAGE === 'true'
+// Use Supabase Storage by default in production, local storage only in development
+const USE_SUPABASE_STORAGE = process.env.NODE_ENV === 'production' || process.env.USE_SUPABASE_STORAGE === 'true'
 
 export async function POST(req: Request) {
   try {
     console.log('📥 Image upload API called')
     console.log('🔧 Storage mode:', USE_SUPABASE_STORAGE ? 'Supabase Storage' : 'Local Storage')
+    console.log('🌍 Environment:', process.env.NODE_ENV)
 
     // Get authenticated user
     const supabase = await createClient()
@@ -56,7 +58,7 @@ export async function POST(req: Request) {
     let imageUrl: string
 
     if (USE_SUPABASE_STORAGE) {
-      // Supabase Storage implementation
+      // Supabase Storage implementation (primary for production)
       try {
         const timestamp = Date.now()
         const extension = file.name.split('.').pop()
@@ -89,9 +91,18 @@ export async function POST(req: Request) {
         imageUrl = urlData.publicUrl
         console.log('🔗 Supabase public URL:', imageUrl)
       } catch (supabaseError) {
-        console.error('❌ Supabase Storage error, falling back to local storage:', supabaseError)
+        console.error('❌ Supabase Storage error:', supabaseError)
+        
+        // In production, we can't fall back to local storage, so return error
+        if (process.env.NODE_ENV === 'production') {
+          return NextResponse.json(
+            { error: 'Failed to upload image. Please try again.' },
+            { status: 500 }
+          )
+        }
 
-        // Fallback to local storage
+        // Fallback to local storage only in development
+        console.log('🔄 Falling back to local storage (development only)')
         const timestamp = Date.now()
         const extension = file.name.split('.').pop()
         const fileName = `${user.id}-${timestamp}.${extension}`
@@ -107,10 +118,17 @@ export async function POST(req: Request) {
         console.log('💾 File saved locally (fallback):', filePath)
 
         imageUrl = `/uploads/profile-images/${fileName}`
-        console.log('�� Local public URL (fallback):', imageUrl)
+        console.log('🔗 Local public URL (fallback):', imageUrl)
       }
     } else {
-      // Local storage implementation
+      // Local storage implementation (development only)
+      if (process.env.NODE_ENV === 'production') {
+        return NextResponse.json(
+          { error: 'Local storage not available in production' },
+          { status: 500 }
+        )
+      }
+
       const timestamp = Date.now()
       const extension = file.name.split('.').pop()
       const fileName = `${user.id}-${timestamp}.${extension}`

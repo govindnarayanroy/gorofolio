@@ -102,70 +102,85 @@ Return **ONLY** this JSON:
 async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   console.log('📄 Extracting text from PDF with pdf2json...')
   console.log('📦 Buffer size:', buffer.length)
+  console.log('🌍 Environment:', process.env.NODE_ENV)
+  console.log('🔧 Runtime:', process.env.VERCEL ? 'Vercel' : 'Local')
   
   return new Promise((resolve, reject) => {
-    const pdfParser = new PDFParser()
-    
-    // Set up event handlers
-    pdfParser.on('pdfParser_dataError', (errData: any) => {
-      console.error('❌ PDF parsing error:', errData.parserError)
-      reject(new Error(`PDF parsing failed: ${errData.parserError}`))
-    })
-    
-    pdfParser.on('pdfParser_dataReady', (pdfData: any) => {
-      try {
-        console.log('✅ PDF parsed successfully')
-        
-        // Extract text from all pages
-        let extractedText = ''
-        
-        if (pdfData.Pages && Array.isArray(pdfData.Pages)) {
-          for (const page of pdfData.Pages) {
-            if (page.Texts && Array.isArray(page.Texts)) {
-              for (const textItem of page.Texts) {
-                if (textItem.R && Array.isArray(textItem.R)) {
-                  for (const run of textItem.R) {
-                    if (run.T) {
-                      // Decode URI component and add to text
-                      const decodedText = decodeURIComponent(run.T)
-                      extractedText += decodedText + ' '
+    try {
+      const pdfParser = new PDFParser()
+      
+      // Set up event handlers
+      pdfParser.on('pdfParser_dataError', (errData: any) => {
+        console.error('❌ PDF parsing error:', errData.parserError)
+        reject(new Error(`PDF parsing failed: ${errData.parserError}`))
+      })
+      
+      pdfParser.on('pdfParser_dataReady', (pdfData: any) => {
+        try {
+          console.log('✅ PDF parsed successfully')
+          
+          // Extract text from all pages
+          let extractedText = ''
+          
+          if (pdfData.Pages && Array.isArray(pdfData.Pages)) {
+            console.log(`📄 Processing ${pdfData.Pages.length} pages`)
+            for (const page of pdfData.Pages) {
+              if (page.Texts && Array.isArray(page.Texts)) {
+                for (const textItem of page.Texts) {
+                  if (textItem.R && Array.isArray(textItem.R)) {
+                    for (const run of textItem.R) {
+                      if (run.T) {
+                        try {
+                          // Decode URI component and add to text
+                          const decodedText = decodeURIComponent(run.T)
+                          extractedText += decodedText + ' '
+                        } catch (decodeError) {
+                          // If decoding fails, use the raw text
+                          console.warn('⚠️ Failed to decode text, using raw:', run.T)
+                          extractedText += run.T + ' '
+                        }
+                      }
                     }
                   }
                 }
               }
+              // Add line break between pages
+              extractedText += '\n'
             }
-            // Add line break between pages
-            extractedText += '\n'
+          } else {
+            console.error('❌ No pages found in PDF data')
+            reject(new Error('No readable content found in PDF'))
+            return
           }
+          
+          // Clean up the text
+          extractedText = extractedText
+            .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+            .replace(/\n\s*\n/g, '\n') // Replace multiple newlines with single newline
+            .trim()
+          
+          console.log('📝 Extracted text length:', extractedText.length)
+          console.log('📝 Text preview:', extractedText.substring(0, 200) + '...')
+          
+          if (extractedText.length < 50) {
+            console.error('❌ Insufficient text extracted:', extractedText.length, 'characters')
+            reject(new Error('Could not extract sufficient text from PDF. Please ensure the PDF contains readable text and is not password-protected.'))
+            return
+          }
+          
+          resolve(extractedText)
+        } catch (error) {
+          console.error('❌ Error processing PDF data:', error)
+          reject(new Error('Failed to process PDF data'))
         }
-        
-        // Clean up the text
-        extractedText = extractedText
-          .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-          .replace(/\n\s*\n/g, '\n') // Replace multiple newlines with single newline
-          .trim()
-        
-        console.log('📝 Extracted text length:', extractedText.length)
-        console.log('📝 Text preview:', extractedText.substring(0, 200) + '...')
-        
-        if (extractedText.length < 50) {
-          reject(new Error('Could not extract sufficient text from PDF. Please ensure the PDF contains readable text.'))
-          return
-        }
-        
-        resolve(extractedText)
-      } catch (error) {
-        console.error('❌ Error processing PDF data:', error)
-        reject(new Error('Failed to process PDF data'))
-      }
-    })
-    
-    // Parse the PDF buffer
-    try {
+      })
+      
+      // Parse the PDF buffer
+      console.log('🔄 Starting PDF parsing...')
       pdfParser.parseBuffer(buffer)
     } catch (error) {
-      console.error('❌ Error parsing PDF buffer:', error)
-      reject(new Error('Failed to parse PDF buffer'))
+      console.error('❌ Error initializing PDF parser:', error)
+      reject(new Error('Failed to initialize PDF parser'))
     }
   })
 }
