@@ -17,7 +17,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
-    "security:check": "npm audit --audit-level moderate",
+    "security:check": "pnpm audit --audit-level moderate",
     "lighthouse:ci": "lhci autorun",
     "analyze": "cross-env ANALYZE=true next build",
     "download-coach": "ts-node scripts/download-coach-animation.ts"
