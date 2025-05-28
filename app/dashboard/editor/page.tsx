@@ -661,7 +661,7 @@ export default function EditorPage() {
               onClick={handleSave}
               disabled={saving}
               variant="outline"
-              className="border-white/20 text-white hover:bg-white/10"
+              className="border-slate-300 bg-white/90 text-slate-700 hover:bg-white hover:text-slate-900 shadow-lg"
             >
               {saving ? (
                 <>
