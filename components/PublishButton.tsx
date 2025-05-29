@@ -52,7 +52,7 @@ export function PublishButton({ profileId }: PublishButtonProps) {
       ) : (
         <>
           <FaRocket size={16} />
-          Publish Portfolio
+          Deploy Manually
         </>
       )}
     </button>

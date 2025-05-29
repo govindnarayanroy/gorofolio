@@ -256,7 +256,7 @@ export function PortfolioPublish({ profileId, className = '' }: PortfolioPublish
               ) : (
                 <>
                   <Share2 className="mr-2 h-4 w-4" />
-                  Publish Portfolio
+                  Publish Live
                 </>
               )}
             </Button>
