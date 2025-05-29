@@ -33,7 +33,7 @@ export function PortfolioPublish({ profileId, className = '' }: PortfolioPublish
     try {
       console.log('🚀 Publishing portfolio...', { profileId, customSlug })
 
-      // Call the actual deploy API
+      // Call the deploy API
       const response = await fetch('/api/portfolio/deploy', {
         method: 'POST',
         headers: {
@@ -54,21 +54,13 @@ export function PortfolioPublish({ profileId, className = '' }: PortfolioPublish
       console.log('✅ Portfolio published successfully:', result)
 
       setIsPublished(true)
+      setDeploymentUrl(result.url)
 
-      // Show success message with deployment info
-      if (result.mock) {
-        toast.success('Portfolio published successfully! (Mock deployment for testing)')
-      } else if (result.hookTriggered) {
-        toast.success('Portfolio deployment triggered! Your site will be live shortly.')
-      } else {
-        toast.success('Portfolio published successfully!')
-      }
+      // Show success message
+      toast.success(result.message || 'Portfolio published successfully!')
 
-      // Update the portfolio URL if provided
-      if (result.url) {
-        setDeploymentUrl(result.url)
-        console.log('📍 Portfolio URL:', result.url)
-      }
+      // Redirect to the portfolio page
+      window.open(result.url, '_blank')
     } catch (error) {
       console.error('❌ Publishing failed:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to publish portfolio')

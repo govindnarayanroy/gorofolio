@@ -28,127 +28,50 @@ export async function POST(request: NextRequest) {
     console.log('📋 Deploy request:', { profileId, customSlug, userId: user.id })
 
     // Get user's profile data
-    const profile = getProfileById(profileId)
+    const profile = await getProfileById(profileId)
     if (!profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
-    // Check for Vercel deploy hook
-    const vercelDeployHook = process.env.VERCEL_DEPLOY_HOOK
+    // Update the resume to be published
+    const { data: updateData, error: updateError } = await supabase
+      .from('resumes')
+      .update({ is_published: true })
+      .eq('id', profileId)
+      .select()
+      .single()
 
-    console.log('🔑 Environment check:', {
-      hasVercelDeployHook: !!vercelDeployHook,
-      hookLength: vercelDeployHook?.length || 0,
-    })
-
-    if (!vercelDeployHook) {
-      console.log('⚠️ No Vercel deploy hook found, using mock deployment')
-
-      // Mock deployment for development/testing
-      const mockUrl = customSlug
-        ? `https://${customSlug}.vercel.app`
-        : `https://portfolio-${profileId}-${Date.now()}.vercel.app`
-
-      // Save the mock URL to database
-      try {
-        await savePortfolio(mockUrl, profileId)
-        console.log('✅ Mock portfolio URL saved to database')
-      } catch (dbError) {
-        console.error('❌ Failed to save portfolio URL:', dbError)
-      }
-
-      return NextResponse.json({
-        success: true,
-        url: mockUrl,
-        deploymentId: `mock-${Date.now()}`,
-        message: 'Portfolio published successfully (mock deployment)',
-        mock: true,
-      })
+    if (updateError) {
+      console.error('❌ Failed to update resume publish status:', updateError)
+      return NextResponse.json(
+        { error: 'Failed to publish portfolio', details: updateError.message },
+        { status: 500 }
+      )
     }
 
-    // Generate static files for deployment
-    const htmlContent = generateStaticHTML(profile, profileId)
-    const cssContent = generateStaticCSS()
-    const packageJson = generatePackageJson(profile.name)
+    // Generate the portfolio URL using the existing portfolio page
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://gorofolio.vercel.app'
+    const portfolioUrl = `${baseUrl}/portfolio/${profileId}`
 
-    // Prepare deployment data for the deploy hook
-    const deploymentData = {
-      profileId,
-      customSlug,
-      userId: user.id,
-      timestamp: Date.now(),
-      files: {
-        'index.html': htmlContent,
-        'style.css': cssContent,
-        'package.json': packageJson,
-      },
-    }
-
-    console.log('📤 Triggering Vercel deploy hook...')
-
-    // Trigger Vercel deploy hook
-    const deployResponse = await fetch(vercelDeployHook, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'Gorofolio-Portfolio-Deploy/1.0',
-      },
-      body: JSON.stringify(deploymentData),
-    })
-
-    if (!deployResponse.ok) {
-      const errorData = await deployResponse.text()
-      console.error('❌ Vercel deploy hook failed:', {
-        status: deployResponse.status,
-        statusText: deployResponse.statusText,
-        error: errorData,
-      })
-
-      throw new Error(`Deploy hook failed: ${deployResponse.status} ${deployResponse.statusText}`)
-    }
-
-    // Deploy hook response might be empty or contain deployment info
-    let deploymentInfo
+    // Save the portfolio URL to database
     try {
-      deploymentInfo = await deployResponse.json()
-    } catch {
-      // Deploy hook might return empty response, which is normal
-      deploymentInfo = { triggered: true }
-    }
-
-    console.log('✅ Deploy hook triggered successfully:', deploymentInfo)
-
-    // Generate the expected deployment URL
-    // Use the correct Vercel domain format: gorofolio-git-main-govind-roys-projects.vercel.app
-    const baseUrl =
-      process.env.VERCEL_PROJECT_URL || 'gorofolio-git-main-govind-roys-projects.vercel.app'
-    const deploymentUrl = customSlug
-      ? `https://${customSlug}-govind-roys-projects.vercel.app`
-      : `https://${baseUrl}`
-
-    // Save the deployment URL to database
-    try {
-      await savePortfolio(deploymentUrl, profileId)
+      await savePortfolio(portfolioUrl, profileId)
       console.log('✅ Portfolio URL saved to database')
     } catch (dbError) {
       console.error('❌ Failed to save portfolio URL:', dbError)
-      // Continue anyway - deployment was triggered successfully
     }
 
     return NextResponse.json({
       success: true,
-      url: deploymentUrl,
-      deploymentId: deploymentInfo?.id || `hook-${Date.now()}`,
-      message: 'Portfolio deployment triggered successfully',
-      hookTriggered: true,
-      note: 'Deployment is processing. Your portfolio will be live shortly.',
-      deploymentInfo,
+      url: portfolioUrl,
+      message: 'Portfolio published successfully',
+      note: 'Your portfolio is now live and accessible.',
     })
   } catch (error) {
     console.error('❌ Deployment error:', error)
     return NextResponse.json(
       {
-        error: 'Failed to trigger portfolio deployment',
+        error: 'Failed to publish portfolio',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
