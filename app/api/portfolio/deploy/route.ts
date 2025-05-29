@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { getOrCreatePortfolioSlug } from '@/lib/portfolio-utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -78,8 +79,12 @@ export async function POST(request: NextRequest) {
     if (!vercelToken) {
       console.log('⚠️ No Vercel API token found, using mock deployment')
       
+      // Get or create unique portfolio slug even for mock deployment
+      const portfolioSlug = await getOrCreatePortfolioSlug(profile.name, user.id)
+      console.log('🏷️ Portfolio slug (mock):', portfolioSlug)
+      
       // Mock deployment for development/testing
-      const mockUrl = `https://portfolio-${profile.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.vercel.app`
+      const mockUrl = `https://${portfolioSlug}.vercel.app`
       
       try {
         // Save portfolio directly using the server-side supabase client
@@ -94,6 +99,7 @@ export async function POST(request: NextRequest) {
           await supabase
             .from('portfolios')
             .update({
+              slug: portfolioSlug,
               url: mockUrl,
               resume_id: profileId,
               updated_at: new Date().toISOString(),
@@ -105,6 +111,7 @@ export async function POST(request: NextRequest) {
             .from('portfolios')
             .insert({
               user_id: user.id,
+              slug: portfolioSlug,
               url: mockUrl,
               resume_id: profileId,
             })
@@ -118,6 +125,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         url: mockUrl,
+        slug: portfolioSlug,
         message: 'Portfolio published successfully (mock deployment)',
         note: 'This is a mock deployment. Configure VERCEL_TOKEN for live deployments.',
         deploymentId: `mock-${Date.now()}`,
@@ -128,6 +136,19 @@ export async function POST(request: NextRequest) {
       hasVercelToken: !!vercelToken, 
       tokenLength: vercelToken.length 
     })
+
+    // Get or create unique portfolio slug
+    const portfolioSlug = await getOrCreatePortfolioSlug(profile.name, user.id)
+    console.log('🏷️ Portfolio slug:', portfolioSlug)
+
+    // Check if user has an existing portfolio to determine if we should update
+    const { data: existingPortfolio } = await supabase
+      .from('portfolios')
+      .select('*')
+      .eq('user_id', user.id)
+      .single()
+
+    console.log('📋 Existing portfolio:', existingPortfolio ? 'Found' : 'None')
 
     // Generate static files for deployment
     const staticHTML = generateStaticHTML(profile, profileId)
@@ -149,9 +170,38 @@ export async function POST(request: NextRequest) {
     await Promise.all(uploadPromises)
     console.log('✅ Files uploaded to Vercel')
 
-    // Step 2: Create deployment
+    // Step 2: Check if project exists and create/update deployment accordingly
+    let projectId = null
+    let isUpdate = false
+
+    // Always check for existing Vercel project with the same slug name
+    try {
+      console.log('🔍 Searching for existing Vercel project:', portfolioSlug)
+      const projectsResponse = await fetch(`https://api.vercel.com/v9/projects?search=${portfolioSlug}`, {
+        headers: {
+          'Authorization': `Bearer ${vercelToken}`,
+        },
+      })
+      
+      if (projectsResponse.ok) {
+        const projectsData = await projectsResponse.json()
+        const existingProject = projectsData.projects?.find((p: any) => p.name === portfolioSlug)
+        
+        if (existingProject) {
+          projectId = existingProject.id
+          isUpdate = true
+          console.log('🔄 Found existing Vercel project, will update:', projectId)
+        } else {
+          console.log('📝 No existing Vercel project found, will create new one')
+        }
+      }
+    } catch (error) {
+      console.log('⚠️ Could not check for existing project:', error)
+    }
+
+    // Step 3: Create deployment (either new project or update existing)
     const deploymentPayload = {
-      name: `portfolio-${profile.name.toLowerCase().replace(/\s+/g, '-')}`,
+      name: portfolioSlug, // Use consistent slug-based naming
       files: [
         {
           file: 'index.html',
@@ -173,9 +223,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log('📤 Creating Vercel deployment...')
+    console.log(`📤 ${isUpdate ? 'Updating' : 'Creating'} Vercel deployment...`)
 
-    const deployResponse = await fetch('https://api.vercel.com/v13/deployments', {
+    // Use different API endpoints for new vs existing projects
+    const deploymentUrl = isUpdate 
+      ? `https://api.vercel.com/v13/deployments?forceNew=1&projectId=${projectId}`
+      : 'https://api.vercel.com/v13/deployments'
+
+    const deployResponse = await fetch(deploymentUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${vercelToken}`,
@@ -202,9 +257,9 @@ export async function POST(request: NextRequest) {
     }
 
     const deployResult = await deployResponse.json()
-    console.log('✅ Vercel deployment created:', deployResult)
+    console.log(`✅ Vercel deployment ${isUpdate ? 'updated' : 'created'}:`, deployResult)
 
-    // Step 3: Disable Vercel Authentication for the project to make it truly public
+    // Step 4: Disable Vercel Authentication for the project to make it truly public
     if (deployResult.project?.id) {
       console.log('🔓 Disabling Vercel Authentication for project...')
       try {
@@ -233,46 +288,46 @@ export async function POST(request: NextRequest) {
     // Generate the portfolio URL
     const portfolioUrl = deployResult.url ? `https://${deployResult.url}` : `https://${deployResult.id}.vercel.app`
 
-    // Save the portfolio URL to database
+    // Save the portfolio URL and slug to database
     try {
-      const { data: existingPortfolio } = await supabase
-        .from('portfolios')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
-
       if (existingPortfolio) {
         // Update existing portfolio
         await supabase
           .from('portfolios')
           .update({
+            slug: portfolioSlug,
             url: portfolioUrl,
             resume_id: profileId,
             updated_at: new Date().toISOString(),
           })
           .eq('id', existingPortfolio.id)
+        
+        console.log('✅ Portfolio updated in database')
       } else {
         // Create new portfolio
         await supabase
           .from('portfolios')
           .insert({
             user_id: user.id,
+            slug: portfolioSlug,
             url: portfolioUrl,
             resume_id: profileId,
           })
+        
+        console.log('✅ New portfolio created in database')
       }
-      
-      console.log('✅ Portfolio URL saved to database')
     } catch (dbError) {
-      console.error('❌ Failed to save portfolio URL:', dbError)
+      console.error('❌ Failed to save portfolio to database:', dbError)
     }
 
     return NextResponse.json({
       success: true,
       url: portfolioUrl,
-      message: 'Portfolio published successfully',
+      slug: portfolioSlug,
+      message: `Portfolio ${isUpdate ? 'updated' : 'published'} successfully`,
       note: 'Your static portfolio is now live and accessible to anyone.',
       deploymentId: deployResult.id,
+      isUpdate,
       vercelResponse: deployResult,
     })
   } catch (error) {

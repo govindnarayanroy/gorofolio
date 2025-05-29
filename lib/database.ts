@@ -12,6 +12,7 @@ export interface ResumeRecord {
 export interface PortfolioRecord {
   id: string
   user_id: string
+  slug: string
   url: string | null
   resume_id: string | null
   created_at: string

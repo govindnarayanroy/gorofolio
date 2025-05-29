@@ -15,6 +15,7 @@ alter table resumes add column if not exists image_url text;
 create table if not exists portfolios (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete cascade,
+  slug text unique not null, -- Unique slug for consistent portfolio routes
   url text,
   resume_id uuid references resumes(id) on delete set null,
   created_at timestamptz default now(),
