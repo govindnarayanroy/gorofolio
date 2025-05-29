@@ -72,6 +72,99 @@ export function DashboardOverview({ className = '' }: DashboardOverviewProps) {
     loadData()
   }, [])
 
+  // Show loading animation while data is being fetched
+  if (loading) {
+    return (
+      <div className={`space-y-8 ${className}`}>
+        {/* Loading Welcome Section */}
+        <div className="space-y-4 text-center">
+          <div className="mb-4 flex justify-center">
+            <div className="h-24 w-24 animate-pulse rounded-full bg-white/20"></div>
+          </div>
+          <div className="space-y-2">
+            <div className="mx-auto h-8 w-64 animate-pulse rounded-lg bg-white/20"></div>
+            <div className="mx-auto h-4 w-96 animate-pulse rounded-lg bg-white/10"></div>
+          </div>
+        </div>
+
+        {/* Loading Profile Completion Card */}
+        <Card className="border-white/20 bg-white/10 backdrop-blur-md">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <div className="h-5 w-5 animate-pulse rounded bg-white/20"></div>
+              <div className="h-6 w-32 animate-pulse rounded bg-white/20"></div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <div className="h-4 w-24 animate-pulse rounded bg-white/20"></div>
+                <div className="h-4 w-12 animate-pulse rounded bg-white/20"></div>
+              </div>
+              <div className="h-3 w-full animate-pulse rounded-full bg-white/20"></div>
+              <div className="h-4 w-48 animate-pulse rounded bg-white/10"></div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Loading Quick Actions Grid */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i} className="border-white/20 bg-white/10 backdrop-blur-md">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <div className="h-5 w-5 animate-pulse rounded bg-white/20"></div>
+                  <div className="h-6 w-24 animate-pulse rounded bg-white/20"></div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="h-4 w-full animate-pulse rounded bg-white/10"></div>
+                    <div className="h-4 w-3/4 animate-pulse rounded bg-white/10"></div>
+                  </div>
+                  <div className="h-10 w-full animate-pulse rounded bg-white/20"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Loading Recent Activity */}
+        <Card className="border-white/20 bg-white/10 backdrop-blur-md">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <div className="h-5 w-5 animate-pulse rounded bg-white/20"></div>
+              <div className="h-6 w-32 animate-pulse rounded bg-white/20"></div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 p-4">
+                  <div className="space-y-2">
+                    <div className="h-4 w-32 animate-pulse rounded bg-white/20"></div>
+                    <div className="h-3 w-24 animate-pulse rounded bg-white/10"></div>
+                  </div>
+                  <div className="h-6 w-12 animate-pulse rounded bg-white/20"></div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Loading indicator with text */}
+        <div className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
+            <p className="text-white/80">Loading your dashboard...</p>
+            <p className="text-sm text-white/60">This may take a few moments</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const hasProfile = profile && profile.name && profile.name !== ''
   const completionPercentage = hasProfile ? calculateCompletionPercentage(profile) : 0
 
