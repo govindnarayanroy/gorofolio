@@ -1,23 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
-import { getProfileById } from '@/lib/profiles'
-import { savePortfolio } from '@/lib/database'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 export async function POST(request: NextRequest) {
   try {
     console.log('🚀 Portfolio deploy API called')
 
+    // Create server-side Supabase client with proper authentication
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              )
+            } catch {
+              // The `setAll` method was called from a Server Component.
+              // This can be ignored if you have middleware refreshing
+              // user sessions.
+            }
+          },
+        },
+      }
+    )
+
     // Get authenticated user
-    const supabase = await createClient()
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      console.log('❌ Authentication failed')
+      console.log('❌ Authentication failed:', authError?.message || 'No user')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    console.log('✅ User authenticated:', user.id)
 
     const { profileId, customSlug } = await request.json()
 
@@ -27,35 +52,216 @@ export async function POST(request: NextRequest) {
 
     console.log('📋 Deploy request:', { profileId, customSlug, userId: user.id })
 
-    // Get user's profile data
-    const profile = await getProfileById(profileId)
-    if (!profile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
-    }
-
-    // Update the resume to be published
-    const { data: updateData, error: updateError } = await supabase
+    // Get user's actual profile data from database
+    const { data: resumeData, error: dbError } = await supabase
       .from('resumes')
-      .update({ is_published: true })
-      .eq('id', profileId)
-      .select()
+      .select('data, image_url')
+      .eq('user_id', user.id)
       .single()
 
-    if (updateError) {
-      console.error('❌ Failed to update resume publish status:', updateError)
+    if (dbError || !resumeData?.data) {
+      console.log('❌ No profile data found for user:', user.id)
+      return NextResponse.json({ error: 'Profile not found. Please upload a resume or add your information first.' }, { status: 404 })
+    }
+
+    // Include image_url in the profile data
+    const profile = {
+      ...resumeData.data,
+      image_url: resumeData.image_url
+    }
+
+    console.log('✅ User profile loaded:', { name: profile.name, headline: profile.headline })
+
+    // Check for Vercel API token
+    const vercelToken = process.env.VERCEL_TOKEN
+    
+    if (!vercelToken) {
+      console.log('⚠️ No Vercel API token found, using mock deployment')
+      
+      // Mock deployment for development/testing
+      const mockUrl = `https://portfolio-${profile.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.vercel.app`
+      
+      try {
+        // Save portfolio directly using the server-side supabase client
+        const { data: existingPortfolio } = await supabase
+          .from('portfolios')
+          .select('*')
+          .eq('user_id', user.id)
+          .single()
+
+        if (existingPortfolio) {
+          // Update existing portfolio
+          await supabase
+            .from('portfolios')
+            .update({
+              url: mockUrl,
+              resume_id: profileId,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', existingPortfolio.id)
+        } else {
+          // Create new portfolio
+          await supabase
+            .from('portfolios')
+            .insert({
+              user_id: user.id,
+              url: mockUrl,
+              resume_id: profileId,
+            })
+        }
+        
+        console.log('✅ Mock portfolio URL saved to database')
+      } catch (dbError) {
+        console.error('❌ Failed to save mock portfolio URL:', dbError)
+      }
+      
+      return NextResponse.json({
+        success: true,
+        url: mockUrl,
+        message: 'Portfolio published successfully (mock deployment)',
+        note: 'This is a mock deployment. Configure VERCEL_TOKEN for live deployments.',
+        deploymentId: `mock-${Date.now()}`,
+      })
+    }
+
+    console.log('🔑 Environment check:', { 
+      hasVercelToken: !!vercelToken, 
+      tokenLength: vercelToken.length 
+    })
+
+    // Generate static files for deployment
+    const staticHTML = generateStaticHTML(profile, profileId)
+    const staticCSS = generateStaticCSS()
+
+    // Generate SHA256 hashes for files (required by Vercel API)
+    const crypto = require('crypto')
+    const htmlHash = crypto.createHash('sha1').update(staticHTML).digest('hex')
+    const cssHash = crypto.createHash('sha1').update(staticCSS).digest('hex')
+
+    console.log('📁 Generated file hashes:', { htmlHash, cssHash })
+
+    // Step 1: Upload files to Vercel
+    const uploadPromises = [
+      uploadFileToVercel(vercelToken, htmlHash, staticHTML),
+      uploadFileToVercel(vercelToken, cssHash, staticCSS)
+    ]
+
+    await Promise.all(uploadPromises)
+    console.log('✅ Files uploaded to Vercel')
+
+    // Step 2: Create deployment
+    const deploymentPayload = {
+      name: `portfolio-${profile.name.toLowerCase().replace(/\s+/g, '-')}`,
+      files: [
+        {
+          file: 'index.html',
+          sha: htmlHash,
+          size: Buffer.byteLength(staticHTML, 'utf8')
+        },
+        {
+          file: 'style.css',
+          sha: cssHash,
+          size: Buffer.byteLength(staticCSS, 'utf8')
+        }
+      ],
+      target: 'production',
+      public: true,
+      projectSettings: {
+        framework: null,
+        buildCommand: null,
+        outputDirectory: null
+      }
+    }
+
+    console.log('📤 Creating Vercel deployment...')
+
+    const deployResponse = await fetch('https://api.vercel.com/v13/deployments', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${vercelToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(deploymentPayload),
+    })
+
+    if (!deployResponse.ok) {
+      const errorText = await deployResponse.text()
+      console.error('❌ Vercel deployment failed:', {
+        status: deployResponse.status,
+        statusText: deployResponse.statusText,
+        error: errorText,
+      })
+      
       return NextResponse.json(
-        { error: 'Failed to publish portfolio', details: updateError.message },
+        {
+          error: 'Deployment failed',
+          details: `Status: ${deployResponse.status}, Error: ${errorText}`,
+        },
         { status: 500 }
       )
     }
 
-    // Generate the portfolio URL using the existing portfolio page
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://gorofolio.vercel.app'
-    const portfolioUrl = `${baseUrl}/portfolio/${profileId}`
+    const deployResult = await deployResponse.json()
+    console.log('✅ Vercel deployment created:', deployResult)
+
+    // Step 3: Disable Vercel Authentication for the project to make it truly public
+    if (deployResult.project?.id) {
+      console.log('🔓 Disabling Vercel Authentication for project...')
+      try {
+        const projectUpdateResponse = await fetch(`https://api.vercel.com/v9/projects/${deployResult.project.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${vercelToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ssoProtection: null // Disable Vercel Authentication completely
+          }),
+        })
+
+        if (projectUpdateResponse.ok) {
+          console.log('✅ Vercel Authentication disabled - portfolio is now completely public')
+        } else {
+          const errorText = await projectUpdateResponse.text()
+          console.log('⚠️ Failed to disable Vercel Authentication:', errorText)
+        }
+      } catch (authError) {
+        console.log('⚠️ Could not disable Vercel Authentication:', authError)
+      }
+    }
+
+    // Generate the portfolio URL
+    const portfolioUrl = deployResult.url ? `https://${deployResult.url}` : `https://${deployResult.id}.vercel.app`
 
     // Save the portfolio URL to database
     try {
-      await savePortfolio(portfolioUrl, profileId)
+      const { data: existingPortfolio } = await supabase
+        .from('portfolios')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      if (existingPortfolio) {
+        // Update existing portfolio
+        await supabase
+          .from('portfolios')
+          .update({
+            url: portfolioUrl,
+            resume_id: profileId,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existingPortfolio.id)
+      } else {
+        // Create new portfolio
+        await supabase
+          .from('portfolios')
+          .insert({
+            user_id: user.id,
+            url: portfolioUrl,
+            resume_id: profileId,
+          })
+      }
+      
       console.log('✅ Portfolio URL saved to database')
     } catch (dbError) {
       console.error('❌ Failed to save portfolio URL:', dbError)
@@ -65,7 +271,9 @@ export async function POST(request: NextRequest) {
       success: true,
       url: portfolioUrl,
       message: 'Portfolio published successfully',
-      note: 'Your portfolio is now live and accessible.',
+      note: 'Your static portfolio is now live and accessible to anyone.',
+      deploymentId: deployResult.id,
+      vercelResponse: deployResult,
     })
   } catch (error) {
     console.error('❌ Deployment error:', error)
@@ -79,26 +287,45 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// Upload individual file to Vercel
+async function uploadFileToVercel(token: string, sha: string, content: string) {
+  const uploadResponse = await fetch(`https://api.vercel.com/v2/files`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/octet-stream',
+      'x-vercel-digest': sha,
+    },
+    body: content,
+  })
+
+  if (!uploadResponse.ok) {
+    const errorText = await uploadResponse.text()
+    throw new Error(`File upload failed: ${uploadResponse.status} - ${errorText}`)
+  }
+
+  return uploadResponse.json()
+}
+
 // Generate static HTML for deployment
 function generateStaticHTML(profile: any, profileId: string): string {
   const formatDate = (dateStr: string | undefined) => {
     if (!dateStr) return 'Present'
-    const [year, month] = dateStr.split('-')
-    const monthNames = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ]
-    return `${monthNames[parseInt(month) - 1]} ${year}`
+    const date = new Date(dateStr)
+    const options: Intl.DateTimeFormatOptions = { 
+      year: 'numeric', 
+      month: 'long' 
+    }
+    return date.toLocaleDateString('en-US', options)
+  }
+
+  const getInitials = (name: string) => {
+    if (!name) return ''
+    const names = name.trim().split(' ')
+    if (names.length === 1) {
+      return names[0].charAt(0).toUpperCase()
+    }
+    return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase()
   }
 
   return `<!DOCTYPE html>
@@ -115,120 +342,113 @@ function generateStaticHTML(profile: any, profileId: string): string {
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <div class="profile-photo">
-                <span class="initials">${profile.name
-                  .split(' ')
-                  .map((n: string) => n[0])
-                  .join('')}</span>
-            </div>
-            <h1 class="name">${profile.name}</h1>
-            <h2 class="headline">${profile.headline}</h2>
-        </header>
+    <div class="page-container">
+        <!-- Background Effects -->
+        <div class="bg-overlay"></div>
+        <div class="bg-blur bg-blur-1"></div>
+        <div class="bg-blur bg-blur-2"></div>
 
-        <!-- External Links -->
-        ${
-          profile.links && profile.links.length > 0
-            ? `
-        <section class="links-section">
-            <h3>External Links</h3>
-            <div class="links-container">
-                ${profile.links
-                  .map(
-                    (link: any) => `
-                    <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="link-item">
-                        ${link.label || 'Link'}
-                    </a>
-                `
-                  )
-                  .join('')}
-            </div>
-        </section>
-        `
-            : ''
-        }
-
-        <!-- Summary -->
-        <section class="section">
-            <h2>Summary</h2>
-            <p class="summary">${profile.summary}</p>
-        </section>
-
-        <!-- Experience -->
-        <section class="section">
-            <h2>Experience</h2>
-            ${
-              profile.experiences
-                ?.map(
-                  (exp: any) => `
-                <div class="experience-item">
-                    <div class="experience-header">
-                        <div>
-                            <div class="role">${exp.role}</div>
-                            <div class="company">${exp.company}</div>
-                        </div>
-                        <div class="date">${formatDate(exp.startDate)} - ${formatDate(exp.endDate)}</div>
+        <div class="content-wrapper">
+            <!-- Profile Content -->
+            <div class="profile-card">
+                <!-- Profile Header -->
+                <header class="profile-header">
+                    <div class="profile-photo-container">
+                        ${profile.image_url 
+                          ? `<img src="${profile.image_url}" alt="${profile.name}" class="profile-image" />`
+                          : `<div class="profile-initials">${getInitials(profile.name)}</div>`
+                        }
                     </div>
-                    ${
-                      exp.bullets && exp.bullets.length > 0
-                        ? `
-                        <ul class="bullets">
-                            ${exp.bullets.map((bullet: string) => `<li>${bullet}</li>`).join('')}
-                        </ul>
-                    `
-                        : ''
-                    }
-                </div>
-            `
-                )
-                .join('') || '<p>No experience data available.</p>'
-            }
-        </section>
+                    <h1 class="profile-name">${profile.name}</h1>
+                    <h2 class="profile-headline">${profile.headline}</h2>
+                </header>
 
-        <!-- Education -->
-        <section class="section">
-            <h2>Education</h2>
-            ${
-              profile.education
-                ?.map(
-                  (edu: any) => `
-                <div class="education-item">
-                    <div class="education-header">
-                        <div>
-                            <div class="degree">${edu.degree}</div>
-                            <div class="school">${edu.school}</div>
-                        </div>
-                        <div class="year">${edu.year}</div>
+                <!-- External Links -->
+                ${profile.links && profile.links.length > 0 ? `
+                <section class="links-section">
+                    <h3 class="section-title">External Links</h3>
+                    <div class="links-grid">
+                        ${profile.links.map((link: any) => `
+                            <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="link-card">
+                                <span class="link-icon">🔗</span>
+                                <span class="link-label">${link.label || 'Link'}</span>
+                                <span class="link-arrow">→</span>
+                            </a>
+                        `).join('')}
                     </div>
-                </div>
-            `
-                )
-                .join('') || '<p>No education data available.</p>'
-            }
-        </section>
+                </section>
+                ` : ''}
 
-        <!-- Skills -->
-        <section class="section">
-            <h2>Skills</h2>
-            <div class="skills-container">
-                ${
-                  profile.skills
-                    ?.map(
-                      (skill: string) => `
-                    <span class="skill-tag">${skill}</span>
-                `
-                    )
-                    .join('') || '<p>No skills data available.</p>'
-                }
+                <!-- Summary Section -->
+                <section class="content-section">
+                    <h2 class="section-heading">Summary</h2>
+                    <p class="summary-text">${profile.summary}</p>
+                </section>
+
+                <!-- Experience Section -->
+                ${profile.experiences && profile.experiences.length > 0 ? `
+                <section class="content-section">
+                    <h2 class="section-heading">Experience</h2>
+                    <div class="experience-list">
+                        ${profile.experiences.map((exp: any) => `
+                            <div class="experience-card">
+                                <div class="experience-header">
+                                    <div class="experience-title-group">
+                                        <h3 class="experience-role">${exp.role}</h3>
+                                        <h4 class="experience-company">${exp.company}</h4>
+                                    </div>
+                                    <div class="experience-date">${formatDate(exp.start)} - ${formatDate(exp.end)}</div>
+                                </div>
+                                ${exp.bullets && exp.bullets.length > 0 ? `
+                                    <ul class="experience-bullets">
+                                        ${exp.bullets.map((bullet: string) => `<li>${bullet}</li>`).join('')}
+                                    </ul>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </section>
+                ` : ''}
+
+                <!-- Education Section -->
+                ${profile.education && profile.education.length > 0 ? `
+                <section class="content-section">
+                    <h2 class="section-heading">Education</h2>
+                    <div class="education-list">
+                        ${profile.education.map((edu: any) => `
+                            <div class="education-card">
+                                <div class="education-header">
+                                    <div class="education-title-group">
+                                        <h3 class="education-degree">${edu.degree}</h3>
+                                        <h4 class="education-school">${edu.school}</h4>
+                                    </div>
+                                    <div class="education-year">${edu.year}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </section>
+                ` : ''}
+
+                <!-- Skills Section -->
+                ${profile.skills && profile.skills.length > 0 ? `
+                <section class="content-section">
+                    <h2 class="section-heading">Skills</h2>
+                    <div class="skills-grid">
+                        ${profile.skills.map((skill: string) => `
+                            <span class="skill-tag">${skill}</span>
+                        `).join('')}
+                    </div>
+                </section>
+                ` : ''}
+
+                <!-- Footer -->
+                <footer class="portfolio-footer">
+                    <p class="footer-text">Generated by GoRoFolio • ${new Date().getFullYear()}</p>
+                    <p class="footer-powered">🚀 <strong>Powered by Vercel</strong> - Public portfolio website</p>
+                </footer>
             </div>
-        </section>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <p>Generated by GoRoFolio • ${new Date().getFullYear()}</p>
-        </footer>
+        </div>
     </div>
 </body>
 </html>`
@@ -245,175 +465,309 @@ function generateStaticCSS(): string {
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Open Sans', 'Helvetica Neue', sans-serif;
     line-height: 1.6;
     color: #374151;
-    background: #f9fafb;
+    background: #0f172a;
+    overflow-x: hidden;
 }
 
-.container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem;
-    background: white;
+/* Page Container with Gradient Background */
+.page-container {
     min-height: 100vh;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #3730a3 100%);
+    position: relative;
 }
 
-/* Header Styles */
-.header {
+/* Background Effects */
+.bg-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, transparent 50%, rgba(147, 51, 234, 0.1) 100%);
+    pointer-events: none;
+}
+
+.bg-blur {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.bg-blur-1 {
+    top: 5rem;
+    left: 5rem;
+    width: 24rem;
+    height: 24rem;
+    background: rgba(59, 130, 246, 0.2);
+}
+
+.bg-blur-2 {
+    bottom: 5rem;
+    right: 5rem;
+    width: 24rem;
+    height: 24rem;
+    background: rgba(147, 51, 234, 0.15);
+}
+
+/* Content Wrapper */
+.content-wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 64rem;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+}
+
+/* Profile Card */
+.profile-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px);
+    border-radius: 1.5rem;
+    padding: 3rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Profile Header */
+.profile-header {
     text-align: center;
     margin-bottom: 3rem;
     padding-bottom: 2rem;
     border-bottom: 2px solid #e5e7eb;
 }
 
-.profile-photo {
-    width: 120px;
-    height: 120px;
+.profile-photo-container {
     margin: 0 auto 1.5rem;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    width: 8rem;
+    height: 8rem;
     border-radius: 50%;
+    overflow: hidden;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
-.initials {
-    font-size: 2rem;
+.profile-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.profile-initials {
+    font-size: 2.5rem;
     font-weight: bold;
     color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.name {
-    font-size: 2.5rem;
+.profile-name {
+    font-size: 3rem;
     font-weight: bold;
     color: #111827;
     margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #1f2937, #374151);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
-.headline {
-    font-size: 1.25rem;
+.profile-headline {
+    font-size: 1.5rem;
     color: #6b7280;
     font-weight: 500;
+    letter-spacing: 0.025em;
 }
 
 /* Section Styles */
-.section {
-    margin-bottom: 2.5rem;
+.content-section {
+    margin-bottom: 3rem;
 }
 
-.section h2 {
-    font-size: 1.5rem;
+.section-heading {
+    font-size: 2rem;
     font-weight: bold;
     color: #111827;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid #3b82f6;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 0.75rem;
 }
 
-.summary {
-    font-size: 1rem;
-    line-height: 1.7;
-    text-align: justify;
+.section-heading::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 4rem;
+    height: 3px;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    border-radius: 2px;
 }
 
-/* Links Section */
-.links-section {
-    margin-bottom: 2rem;
-}
-
-.links-section h3 {
-    font-size: 1.125rem;
+.section-title {
+    font-size: 1.25rem;
     font-weight: 600;
     color: #374151;
     margin-bottom: 1rem;
 }
 
-.links-container {
+.summary-text {
+    font-size: 1.125rem;
+    line-height: 1.8;
+    text-align: justify;
+    color: #4b5563;
+}
+
+/* Links Section */
+.links-section {
+    margin-bottom: 2.5rem;
+}
+
+.links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.link-card {
     display: flex;
-    flex-wrap: wrap;
+    align-items: center;
     gap: 0.75rem;
-}
-
-.link-item {
-    display: inline-block;
-    padding: 0.5rem 1rem;
+    padding: 1rem 1.25rem;
     background: linear-gradient(135deg, #dbeafe, #ede9fe);
-    color: #1d4ed8;
-    text-decoration: none;
-    border-radius: 0.75rem;
     border: 1px solid #bfdbfe;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.link-item:hover {
-    background: linear-gradient(135deg, #bfdbfe, #ddd6fe);
-    transform: translateY(-1px);
-}
-
-/* Experience Styles */
-.experience-item {
-    background: linear-gradient(135deg, #f0f9ff, #faf5ff);
-    padding: 1.5rem;
     border-radius: 0.75rem;
-    border: 1px solid #e0e7ff;
-    margin-bottom: 1.5rem;
+    text-decoration: none;
+    color: #1d4ed8;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.link-card:hover {
+    background: linear-gradient(135deg, #bfdbfe, #ddd6fe);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+}
+
+.link-icon {
+    font-size: 1.125rem;
+}
+
+.link-label {
+    flex: 1;
+}
+
+.link-arrow {
+    font-size: 1rem;
+    opacity: 0.7;
+    transition: transform 0.3s ease;
+}
+
+.link-card:hover .link-arrow {
+    transform: translateX(4px);
+}
+
+/* Experience Section */
+.experience-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.experience-card {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.experience-card:hover {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
 }
 
 .experience-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
 }
 
-.role {
-    font-size: 1.125rem;
+.experience-title-group {
+    flex: 1;
+}
+
+.experience-role {
+    font-size: 1.375rem;
     font-weight: bold;
     color: #111827;
+    margin-bottom: 0.5rem;
 }
 
-.company {
-    font-size: 1rem;
+.experience-company {
+    font-size: 1.125rem;
     font-weight: 600;
-    color: #2563eb;
-    margin-top: 0.25rem;
+    color: #3b82f6;
+    margin: 0;
 }
 
-.date {
+.experience-date {
     color: #6b7280;
     font-weight: 500;
     font-size: 0.875rem;
+    text-align: right;
+    white-space: nowrap;
+    margin-left: 1rem;
 }
 
-.bullets {
+.experience-bullets {
     list-style: none;
     margin-left: 0;
 }
 
-.bullets li {
+.experience-bullets li {
     position: relative;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
     padding-left: 1.5rem;
+    line-height: 1.6;
+    color: #4b5563;
 }
 
-.bullets li:before {
-    content: '•';
+.experience-bullets li::before {
+    content: '▶';
     color: #3b82f6;
-    font-weight: bold;
+    font-size: 0.75rem;
     position: absolute;
     left: 0;
+    top: 0.125rem;
 }
 
-/* Education Styles */
-.education-item {
-    background: linear-gradient(135deg, #f0f9ff, #faf5ff);
+/* Education Section */
+.education-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.education-card {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
     padding: 1.5rem;
-    border-radius: 0.75rem;
-    border: 1px solid #e0e7ff;
-    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.education-card:hover {
+    box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
 }
 
 .education-header {
@@ -422,27 +776,34 @@ body {
     align-items: flex-start;
 }
 
-.degree {
-    font-size: 1rem;
+.education-title-group {
+    flex: 1;
+}
+
+.education-degree {
+    font-size: 1.125rem;
     font-weight: bold;
     color: #111827;
+    margin-bottom: 0.25rem;
 }
 
-.school {
-    font-size: 0.875rem;
+.education-school {
+    font-size: 1rem;
     font-weight: 600;
-    color: #2563eb;
-    margin-top: 0.25rem;
+    color: #3b82f6;
+    margin: 0;
 }
 
-.year {
+.education-year {
     color: #6b7280;
     font-weight: 500;
     font-size: 0.875rem;
+    white-space: nowrap;
+    margin-left: 1rem;
 }
 
-/* Skills Styles */
-.skills-container {
+/* Skills Section */
+.skills-grid {
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
@@ -456,26 +817,55 @@ body {
     border: 1px solid #bfdbfe;
     font-weight: 500;
     font-size: 0.875rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.skill-tag:hover {
+    background: linear-gradient(135deg, #bfdbfe, #ddd6fe);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
 }
 
 /* Footer */
-.footer {
+.portfolio-footer {
     text-align: center;
-    margin-top: 3rem;
+    margin-top: 4rem;
     padding-top: 2rem;
     border-top: 1px solid #e5e7eb;
+}
+
+.footer-text {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.footer-powered {
     color: #6b7280;
     font-size: 0.875rem;
 }
 
 /* Responsive Design */
-@media (max-width: 640px) {
-    .container {
-        padding: 1rem;
+@media (max-width: 768px) {
+    .content-wrapper {
+        padding: 2rem 1rem;
     }
     
-    .name {
-        font-size: 2rem;
+    .profile-card {
+        padding: 2rem;
+    }
+    
+    .profile-name {
+        font-size: 2.25rem;
+    }
+    
+    .profile-headline {
+        font-size: 1.25rem;
+    }
+    
+    .section-heading {
+        font-size: 1.75rem;
     }
     
     .experience-header,
@@ -484,31 +874,78 @@ body {
         align-items: flex-start;
     }
     
-    .date,
-    .year {
+    .experience-date,
+    .education-year {
+        margin-left: 0;
         margin-top: 0.5rem;
+        text-align: left;
+    }
+    
+    .links-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .bg-blur {
+        width: 16rem;
+        height: 16rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .content-wrapper {
+        padding: 1.5rem 0.75rem;
+    }
+    
+    .profile-card {
+        padding: 1.5rem;
+        border-radius: 1rem;
+    }
+    
+    .profile-photo-container {
+        width: 6rem;
+        height: 6rem;
+    }
+    
+    .profile-initials {
+        font-size: 2rem;
+    }
+    
+    .profile-name {
+        font-size: 2rem;
+    }
+    
+    .experience-card,
+    .education-card {
+        padding: 1.5rem;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .page-container {
+        background: white;
+    }
+    
+    .bg-overlay,
+    .bg-blur {
+        display: none;
+    }
+    
+    .profile-card {
+        background: white;
+        box-shadow: none;
+        border: none;
+        padding: 0;
+    }
+    
+    .content-wrapper {
+        padding: 0;
+    }
+    
+    .profile-name {
+        color: #111827;
+        -webkit-text-fill-color: #111827;
     }
 }
 `
-}
-
-// Generate package.json for Vercel deployment
-function generatePackageJson(name: string): string {
-  return JSON.stringify(
-    {
-      name: `portfolio-${name.toLowerCase().replace(/\s+/g, '-')}`,
-      version: '1.0.0',
-      description: `Portfolio website for ${name}`,
-      main: 'index.html',
-      scripts: {
-        start: 'serve .',
-        build: "echo 'No build step required'",
-      },
-      keywords: ['portfolio', 'resume', 'professional'],
-      author: name,
-      license: 'MIT',
-    },
-    null,
-    2
-  )
 }
