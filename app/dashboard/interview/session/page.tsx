@@ -87,19 +87,6 @@ function InterviewSessionContent() {
     }
   }, [searchParams])
 
-  // Reset states when question changes
-  useEffect(() => {
-    console.log(`🔄 Resetting states for question ${interviewState.currentQuestionIndex}`)
-    setHasRecorded(false)
-    setTranscript('')
-    setScore(null)
-    setFeedback([])
-    setError('')
-    setIsProcessing(false)
-    setIsScoring(false)
-    setIsSubmitting(false)
-  }, [interviewState.currentQuestionIndex])
-
   const startInterview = async () => {
     setInterviewState(prev => ({ ...prev, isLoading: true }))
     setError('')
@@ -352,7 +339,16 @@ Please provide a score from 1-10 and 2-3 actionable tips for improvement.`
           isComplete: true,
         }))
       } else {
-        // Next question - states will be reset by useEffect
+        // Next question - manually reset states
+        setHasRecorded(false)
+        setTranscript('')
+        setScore(null)
+        setFeedback([])
+        setError('')
+        setIsProcessing(false)
+        setIsScoring(false)
+        setIsSubmitting(false)
+        
         setInterviewState(prev => ({
           ...prev,
           answers: newAnswers,
@@ -373,6 +369,34 @@ Please provide a score from 1-10 and 2-3 actionable tips for improvement.`
     const minutes = Math.floor(diff / 60)
     const seconds = diff % 60
     return `${minutes}:${seconds.toString().padStart(2, '0')}`
+  }
+
+  // Handle interview abort
+  const handleInterviewAbort = async () => {
+    if (interviewState.sessionId) {
+      try {
+        // Optionally notify the server that the interview was aborted
+        await fetch('/api/interview/abort-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ sessionId: interviewState.sessionId }),
+        }).catch(console.error) // Don't block on this
+      } catch (err) {
+        console.error('Error aborting interview:', err)
+      }
+    }
+    // Reset the interview state
+    setInterviewState({
+      sessionId: null,
+      questions: [],
+      currentQuestionIndex: 0,
+      answers: [],
+      isRecording: false,
+      isLoading: false,
+      isComplete: false,
+      startTime: null,
+    })
   }
 
   if (showJobInputs) {
@@ -540,7 +564,11 @@ Please provide a score from 1-10 and 2-3 actionable tips for improvement.`
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
       <div className="container mx-auto p-6">
         <div className="mb-6 flex items-center justify-between">
-          <BackToDashboard variant="header" />
+          <BackToDashboard 
+            variant="header" 
+            isInterviewActive={interviewState.startTime !== null && !interviewState.isComplete}
+            onConfirmExit={handleInterviewAbort}
+          />
           <div className="flex items-center space-x-4">
             {interviewState.startTime && (
               <div className="flex items-center space-x-2 text-blue-200">
