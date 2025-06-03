@@ -132,12 +132,69 @@ export default function EditorPage() {
         if (!a.start) return -1
         if (!b.start) return 1
 
-        // Convert dates to comparable format (YYYY-MM)
-        const dateA = a.start.replace('-', '')
-        const dateB = b.start.replace('-', '')
+        // Parse dates to handle various formats
+        const parseDate = (dateStr: string) => {
+          // Remove any whitespace
+          const cleaned = dateStr.trim()
+          
+          // Handle formats like "2023-12", "2023-1", "12/2023", "Dec 2023", etc.
+          let year: number, month: number
+          
+          // Format: YYYY-MM or YYYY-M
+          if (cleaned.match(/^\d{4}-\d{1,2}$/)) {
+            const [yearStr, monthStr] = cleaned.split('-')
+            year = parseInt(yearStr)
+            month = parseInt(monthStr)
+          }
+          // Format: MM/YYYY or M/YYYY
+          else if (cleaned.match(/^\d{1,2}\/\d{4}$/)) {
+            const [monthStr, yearStr] = cleaned.split('/')
+            year = parseInt(yearStr)
+            month = parseInt(monthStr)
+          }
+          // Format: Mon YYYY (e.g., "Dec 2023", "January 2024")
+          else if (cleaned.match(/^[A-Za-z]{3,9}\s+\d{4}$/)) {
+            const [monthStr, yearStr] = cleaned.split(/\s+/)
+            year = parseInt(yearStr)
+            const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+            const monthIndex = monthNames.findIndex(m => monthStr.toLowerCase().startsWith(m))
+            month = monthIndex >= 0 ? monthIndex + 1 : 1
+          }
+          // Format: Just year (YYYY)
+          else if (cleaned.match(/^\d{4}$/)) {
+            year = parseInt(cleaned)
+            month = 12 // Assume December for year-only dates
+          }
+          // Format: Just month (MM or M) - assume current year
+          else if (cleaned.match(/^\d{1,2}$/)) {
+            year = new Date().getFullYear()
+            month = parseInt(cleaned)
+          }
+          // Fallback: try to parse as Date
+          else {
+            const date = new Date(cleaned)
+            if (!isNaN(date.getTime())) {
+              year = date.getFullYear()
+              month = date.getMonth() + 1
+            } else {
+              // If all else fails, treat as very old date
+              year = 1900
+              month = 1
+            }
+          }
+          
+          // Ensure month is valid (1-12)
+          month = Math.max(1, Math.min(12, month))
+          
+          // Return a comparable number: YYYYMM format
+          return year * 100 + month
+        }
+
+        const dateA = parseDate(a.start)
+        const dateB = parseDate(b.start)
 
         // Sort in descending order (most recent first)
-        return dateB.localeCompare(dateA)
+        return dateB - dateA
       }),
     }))
 
